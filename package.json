@@ -1,0 +1,20 @@
+{
+  "name": "syncviz_api",
+  "version": "1.0.0",
+  "description": "A RESTful API service for all syncviz devices in the ecosystem",
+  "main": "server.mjs",
+  "scripts": {
+    "dev": " node --experimental-modules ./src/server.mjs"
+  },
+  "keywords": [
+    "API",
+    "RESTful",
+    "API",
+    "Syncviz"
+  ],
+  "author": "Karl-Johan Bailey",
+  "license": "ISC",
+  "dependencies": {
+    "restify": "^8.5.1"
+  }
+}
