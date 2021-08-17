@@ -1,15 +1,25 @@
 /*
 Author: Karl-Johan Bailey 17/08/2021
 
-This file must controll configuration throughout the app.
+This file must controll configuration throughout the app with environment awareness.
 */
 
-//Main ENV Variables
+import util from "util";
+import development from "./env/development.mjs";
+import test from "./env/test.mjs";
+import production from "./env/production.mjs";
 
-export const NODE_ENV = process.env.NODE_ENV || "development";
-export const HOST = process.env.HOST || "localhost";
-export const PORT = process.env.PORT || 8080;
+const extend = util._extend;
+const env = process.env.NODE_ENV || "development";
 
-//Database and Storage:
+const defaults = {
+  ENVIRONMENT: { NODE_ENV: env },
+};
 
-export const USER_FILES_PATH = process.env.USER_FILES_PATH || "./";
+const config = {
+  development: extend(development, defaults),
+  test: extend(test, defaults),
+  production: extend(production, defaults),
+};
+
+export default config[env];

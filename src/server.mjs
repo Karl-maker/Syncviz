@@ -8,7 +8,7 @@ This file will:
 */
 
 import restify from "restify";
-import { HOST, PORT, NODE_ENV } from "./config/config.mjs";
+import config from "./config/config.mjs";
 
 function respond(req, res, next) {
   res.send("hello " + req.params.name);
@@ -20,6 +20,11 @@ var server = restify.createServer();
 server.get("/hello/:name", respond);
 server.head("/hello/:name", respond);
 
-server.listen(PORT, HOST, function () {
-  console.log("Syncviz", NODE_ENV, "RESTful API Listening On:", server.url);
+server.listen(config.SERVER.PORT, config.SERVER.HOST, function () {
+  console.log(
+    "Syncviz",
+    config.ENVIRONMENT.NODE_ENV,
+    "environment RESTful API listening on:",
+    server.url
+  );
 });
