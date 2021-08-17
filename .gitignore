@@ -3,8 +3,7 @@
 # dependencies
 /node_modules
 
-# resource folder
-/resource
+# user generated content folder
 
 # testing
 /coverage
