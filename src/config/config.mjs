@@ -5,17 +5,19 @@ This file must controll configuration throughout the app with environment awaren
 */
 
 import util from "util";
-import development from "./env/development.mjs";
 import test from "./env/test.mjs";
+import development from "./env/development.mjs";
 import production from "./env/production.mjs";
 
 const extend = util._extend;
 const env = process.env.NODE_ENV || "development";
-
+const defaults = {
+  environment: { NODE_ENV: env },
+};
 const config = {
-  development: development,
-  test: test,
-  production: production,
+  test: { ...test, ...defaults },
+  development: { ...development, ...defaults },
+  production: { ...production, ...defaults },
 };
 
 export default config[env];
