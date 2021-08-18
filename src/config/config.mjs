@@ -13,7 +13,7 @@ const extend = util._extend;
 const env = process.env.NODE_ENV || "development";
 
 const defaults = {
-  ENVIRONMENT: { NODE_ENV: env },
+  environemnt: { NODE_ENV: env },
 };
 
 const config = {

@@ -1,20 +1,20 @@
 export default {
   //Environment, Machine, Timezone etc:
 
-  ENVIRONMENT: {
+  environment: {
     NODE_ENV: process.env.NODE_ENV || "development",
   },
 
   //Server API:
 
-  SERVER: {
+  server: {
     HOST: process.env.DEV_API_HOST || "localhost",
     PORT: process.env.DEV_API_PORT || 8080,
   },
 
   //Database and Storage:
 
-  STORAGE: {
+  storage: {
     USER_FILES_PATH: process.env.DEV_USER_FILE_PATH || "./",
   },
 };

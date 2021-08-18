@@ -20,10 +20,10 @@ var server = restify.createServer();
 server.get("/hello/:name", respond);
 server.head("/hello/:name", respond);
 
-server.listen(config.SERVER.PORT, config.SERVER.HOST, function () {
+server.listen(config.server.PORT, config.server.HOST, function () {
   console.log(
     "Syncviz",
-    config.ENVIRONMENT.NODE_ENV,
+    config.environment.NODE_ENV,
     "environment RESTful API listening on:",
     server.url
   );
