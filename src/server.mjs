@@ -13,8 +13,11 @@ import httpLogger from "./log/httpLogger.mjs";
 
 //npm modules
 import express from "express";
+import { nextTick } from "async";
 
 const app = express();
+
+//Authorize HTTP request first to form req.user
 
 app.use(httpLogger);
 

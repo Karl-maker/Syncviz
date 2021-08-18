@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 export default {
   //Server API:
   server: {
