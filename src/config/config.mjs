@@ -12,14 +12,10 @@ import production from "./env/production.mjs";
 const extend = util._extend;
 const env = process.env.NODE_ENV || "development";
 
-const defaults = {
-  environemnt: { NODE_ENV: env },
-};
-
 const config = {
-  development: extend(development, defaults),
-  test: extend(test, defaults),
-  production: extend(production, defaults),
+  development: development,
+  test: test,
+  production: production,
 };
 
 export default config[env];

@@ -15,6 +15,6 @@ export default {
   //Database and Storage:
 
   storage: {
-    USER_FILES_PATH: process.env.DEV_USER_FILE_PATH || "./",
+    USER_FILES_PATH: process.env.DEV_USER_FILE_PATH || "./", //From src folder
   },
 };
