@@ -7,24 +7,18 @@ This file will:
 3. listen on port specified by config.mjs file within config folder
 */
 
-import restify from "restify";
 import config from "./config/config.mjs";
+import logger from "./log/logger.mjs";
+import express from "express";
 
-function respond(req, res, next) {
-  res.send("hello " + req.params.name);
-  next();
-}
+const app = express();
 
-var server = restify.createServer();
-//Routes Go Here
-server.get("/hello/:name", respond);
-server.head("/hello/:name", respond);
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
-server.listen(config.server.PORT, config.server.HOST, function () {
-  console.log(
-    "Syncviz",
-    config.environment.NODE_ENV,
-    "environment RESTful API listening on:",
-    server.url
+app.listen(config.server.PORT, config.server.HOST, () => {
+  logger.info(
+    `Server Started and Listening on ${config.server.HOST}:${config.server.PORT} in a ${config.environment.NODE_ENV} environment.`
   );
 });
