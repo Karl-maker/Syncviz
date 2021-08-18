@@ -8,10 +8,15 @@ This file will:
 */
 
 import config from "./config/config.mjs";
-import logger from "./log/logger.mjs";
+import logger from "./log/serverLogger.mjs";
+import httpLogger from "./log/httpLogger.mjs";
+
+//npm modules
 import express from "express";
 
 const app = express();
+
+app.use(httpLogger);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
