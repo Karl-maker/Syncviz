@@ -34,13 +34,13 @@ const httpLogger = morgan(format, {
         JSON.parse(message);
 
       logger.info("HTTP Access Log", {
-        ip,
         user,
-        timestamp: new Date().toString(),
+        ip,
         method,
         url,
         status: Number(status),
         contentLength,
+        timestamp: new Date().toString(),
         responseTime: Number(responseTime),
       });
     },

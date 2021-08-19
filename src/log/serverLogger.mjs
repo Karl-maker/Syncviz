@@ -7,7 +7,7 @@ const options = {
     filename: config.debug.LOG_FILE,
     handleExceptions: true,
     json: true,
-    maxsize: config.debug.LOG_MAXSIZE, // 5MB
+    maxsize: config.debug.LOG_MAXSIZE,
     maxFiles: config.debug.LOG_MAXFILES,
     colorize: false,
   },
