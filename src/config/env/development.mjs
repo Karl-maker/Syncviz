@@ -9,6 +9,8 @@ export default {
   },
 
   optimization: {
+    RATE_LIMIT_WINDOWMS: process.env.DEV_RATE_LIMIT_WINDOWMS || 15, //In minutes
+    RATE_LIMIT_MAX: process.env.DEV_RATE_LIMIT_MAX || 100,
     COMPRESSION_LEVEL: process.env.DEV_COMPRESSION_LEVEL || 6,
     COMPRESSION_MEMLEVEL: process.env.DEV_COMPRESSION_MEMLEVEL || 8,
     COMPRESSION_CHUNKSIZE: process.env.DEV_COMPRESSION_CHUNKSIZE || 16384,

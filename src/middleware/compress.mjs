@@ -15,6 +15,5 @@ export function compressorCheck(compression) {
 export function compressorStrategy(req, res) {
   //Compress customize based on type of req. https://www.npmjs.com/package/compression
   //If it's JSON exit ASAP to not spend time here
-
   return zlib.Z_DEFAULT_STRATEGY;
 }
