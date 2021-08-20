@@ -17,7 +17,6 @@ function compressorCheck(compression) {
 function compressorStrategy(contentType) {
   //Compress customize based on type of req. https://www.npmjs.com/package/compression
   //If it's JSON exit ASAP to not spend time here
-
   let strategy;
 
   switch (contentType) {
@@ -26,12 +25,10 @@ function compressorStrategy(contentType) {
       break;
     case "IMAGE":
       break;
-
     default:
       strategy = zlib.Z_DEFAULT_STRATEGY;
       break;
   }
-
   return strategy;
 }
 
