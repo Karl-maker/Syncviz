@@ -43,7 +43,8 @@ app.get("/compress", (req, res) => {
 });
 
 app.listen(config.server.PORT, config.server.HOST, () => {
-  logger.info(
-    `Server Started and Listening on ${config.server.HOST}:${config.server.PORT} in a ${config.environment.NODE_ENV} environment.`
-  );
+  logger.info({
+    message: `Server Started and Listening on ${config.server.HOST}:${config.server.PORT} in a ${config.environment.NODE_ENV} environment`,
+    timestamp: `${new Date().toString()}`,
+  });
 });

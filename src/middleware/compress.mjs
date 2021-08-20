@@ -23,7 +23,17 @@ function compressorStrategy(contentType) {
     case "DEFAULT":
       strategy = zlib.Z_DEFAULT_STRATEGY;
       break;
-    case "IMAGE":
+    case "RLE":
+      strategy = zlib.Z_RLE;
+      break;
+    case "FILTERED":
+      strategy = zlib.Z_FILTERED;
+      break;
+    case "FIXED":
+      strategy = zlib.Z_FIXED;
+      break;
+    case "HUFFMAN":
+      strategy = zlib.Z_HUFFMAN_ONLY;
       break;
     default:
       strategy = zlib.Z_DEFAULT_STRATEGY;

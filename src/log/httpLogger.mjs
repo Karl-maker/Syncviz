@@ -23,14 +23,13 @@ const format = json({
   status: ":status",
   ip: ":ip",
   user: ":user",
-  contentLength: ":res[content-length]",
   responseTime: ":response-time",
 });
 
 const httpLogger = morgan(format, {
   stream: {
     write: (message) => {
-      const { method, url, status, ip, user, contentLength, responseTime } =
+      const { method, url, status, ip, user, responseTime } =
         JSON.parse(message);
 
       logger.info("HTTP Access Log", {
@@ -39,7 +38,6 @@ const httpLogger = morgan(format, {
         method,
         url,
         status: Number(status),
-        contentLength,
         timestamp: new Date().toString(),
         responseTime: Number(responseTime),
       });
