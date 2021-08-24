@@ -1,7 +1,7 @@
 {
-  "name": "syncviz_api",
+  "name": "project_connect_api",
   "version": "1.0.0",
-  "description": "A RESTful API service for all syncviz devices in the ecosystem",
+  "description": "A RESTful API service for a new social media platform",
   "main": "server.mjs",
   "scripts": {
     "dev": "nodemon --experimental-modules  ./src/server.mjs"

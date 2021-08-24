@@ -1,4 +1,4 @@
-# Syncviz RESTful API Instructions
+# Project Connect RESTful API Instructions
 
 #### Fill in all .env variables.
 
