@@ -10,15 +10,19 @@ This file will:
 import config from "./config/config.mjs";
 import logger from "./log/serverLogger.mjs";
 import httpLogger from "./log/httpLogger.mjs";
-import { compressRouter } from "./middleware/compress.mjs";
-import { corsLoose, corsStrict } from "./middleware/cors.mjs";
+import { corsOrigins } from "./middleware/cors.mjs";
 
 //npm modules
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
-import compression from "compression";
+
+//utilites
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const limiter = rateLimit({
@@ -32,15 +36,32 @@ app.use(helmet());
 app.use(limiter);
 app.use(
   cors({
-    origin: { ...corsLoose.origin, ...corsStrict.origin },
+    origin: corsOrigins,
     optionSuccessStatus: 200,
   })
 );
 
+//API Routes:
 app.get("/compress", (req, res) => {
   let result = "Rain today dry tomorrow, save a almond just in case ";
   res.send(result.repeat(100000));
 });
+//Legal && Other Routes:
+
+//MERN Stack React.js Frontend App:
+if (config.environment.NODE_ENV === "production") {
+  app.use(express.static(config.environment.REACT_BUILD_PATH));
+
+  const INDEX_PATH = path.join(
+    __dirname,
+    config.environment.REACT_BUILD_PATH,
+    config.environment.REACT_BUILD_INDEX
+  );
+
+  app.get("*", (res, req) => {
+    res.sendFile(INDEX_PATH);
+  });
+}
 
 app.listen(config.server.PORT, config.server.HOST, () => {
   logger.info({

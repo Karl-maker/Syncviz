@@ -11,6 +11,9 @@
 # production
 /build
 
+#react app
+/client
+
 # debugging
 /logs
 

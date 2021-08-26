@@ -13,7 +13,11 @@ const env = process.env.NODE_ENV || "development";
 //Default Variables
 
 const defaults = {
-  environment: { NODE_ENV: env },
+  environment: {
+    NODE_ENV: env,
+    REACT_BUILD_PATH: process.env.REACT_BUILD_PATH || "client/build",
+    REACT_BUILD_INDEX: process.env.REACT_BUILD_INDEX || "index.html",
+  },
 };
 
 const config = {
