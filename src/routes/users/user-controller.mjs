@@ -2,7 +2,8 @@ import express from "express";
 const router = express.Router();
 
 router.get("/user", (req, res, next) => {
-  res.send("GET User");
+  var user = "GET User";
+  res.send(user.repeat(1000));
   next();
 });
 

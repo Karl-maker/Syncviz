@@ -1,6 +1,7 @@
 import zlib from "zlib";
 import compression from "compression";
 import logger from "../log/serverLogger.mjs";
+import { timeStamp } from "console";
 
 function compressorCheck(compression) {
   //inject import
@@ -44,17 +45,21 @@ function compressorStrategy(contentType) {
 
 //Compression
 
-export function compressRouter(
+export function compressRouter({
   config,
   level,
   threshold,
   chunkSize,
   memLevel,
   windowBits,
-  contentType
-) {
+  contentType,
+}) {
   contentType = typeof contentType !== undefined ? contentType : "DEFAULT";
   let strategy = compressorStrategy(contentType);
+  logger.info({
+    message: `Compress HTTP (req, res) with ${contentType} compressor.`,
+    timestamp: `${new Date().toString()}`,
+  });
 
   return compression({
     level:

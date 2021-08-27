@@ -11,6 +11,7 @@ import config from "./config/config.mjs";
 import logger from "./log/serverLogger.mjs";
 import httpLogger from "./log/httpLogger.mjs";
 import { corsOrigins } from "./middleware/cors.mjs";
+import { compressRouter } from "./middleware/compress.mjs";
 import appRoutes from "./routes/index.mjs";
 
 //npm modules
@@ -32,6 +33,14 @@ const limiter = rateLimit({
 });
 
 //Middleware
+
+// GZIP all assets
+app.use((req, res, next) => {
+  //depending on content type switch contentType
+  compressRouter({ config: config, contentType: "DEFAULT" });
+  next();
+});
+
 app.use(httpLogger);
 app.use(helmet());
 app.use(limiter);
