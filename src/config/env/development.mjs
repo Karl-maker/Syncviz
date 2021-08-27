@@ -26,6 +26,12 @@ export default {
     LOG_MAXFILES: process.env.DEV_LOG_MAXFILE || 5,
   },
 
+  email: {
+    SENDER_EMAIL_ADDRESS: process.env.DEV_SENDER_EMAIL_ADDRESS || "",
+    SENDER_EMAIL_PASSWORD: process.env.DEV_SENDER_EMAIL_PASSWORD || "password",
+    SENDER_EMAIL_SERVICE: process.env.DEV_SENDER_EMAIL_SERVICE || "Gmail",
+  },
+
   //Database and Storage:
   storage: {
     USER_FILES_PATH: process.env.DEV_USER_FILE_PATH || "./", //From src folder
