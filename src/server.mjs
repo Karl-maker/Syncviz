@@ -11,6 +11,7 @@ import config from "./config/config.mjs";
 import logger from "./log/serverLogger.mjs";
 import httpLogger from "./log/httpLogger.mjs";
 import { corsOrigins } from "./middleware/cors.mjs";
+import appRoutes from "./routes/index.mjs";
 
 //npm modules
 import express from "express";
@@ -41,11 +42,9 @@ app.use(
   })
 );
 
-//API Routes:
-app.get("/compress", (req, res) => {
-  let result = "Rain today dry tomorrow, save a almond just in case ";
-  res.send(result.repeat(100000));
-});
+//API Routes
+app.use("/api", appRoutes);
+
 //Legal && Other Routes:
 
 //MERN Stack React.js Frontend App:
@@ -58,7 +57,7 @@ if (config.environment.NODE_ENV === "production") {
     config.environment.REACT_BUILD_INDEX
   );
 
-  app.get("*", (res, req) => {
+  app.get("*", (req, res) => {
     res.sendFile(INDEX_PATH);
   });
 }
