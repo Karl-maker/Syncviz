@@ -16,7 +16,12 @@ router.get("/user", async (req, res, next) => {
 
 router.post("/user", jsonParser, async (req, res, next) => {
   try {
-    let new_user = new db.user({ name: req.body.name, age: req.body.age });
+    let new_user = new db.user({
+      last_name: req.body.last_name,
+      first_name: req.body.first_name,
+      email: req.body.email,
+      username: req.body.username,
+    });
     await new_user.save();
     res.status(200).json(new_user);
   } catch (error) {
