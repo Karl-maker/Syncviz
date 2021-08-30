@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 import logger from "../log/serverLogger.mjs";
 import config from "../config/config.mjs";
 
+//............. DB MODELS.............................
+
+import user from "../routes/users/user-model.mjs";
+
 // Create the database connection
 
 const DB_STRING = config.database.DB_CONNECT;
@@ -56,3 +60,9 @@ process.on("SIGINT", () => {
     process.exit(0);
   });
 });
+
+//..............Central access point to all db models.....................
+
+export const db = {
+  user: user,
+};

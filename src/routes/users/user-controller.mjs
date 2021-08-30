@@ -1,5 +1,5 @@
 import express from "express";
-import User from "./user-model.mjs";
+import { db } from "../../helpers/db.mjs";
 import { jsonParser } from "../../middleware/body-parser.mjs";
 const router = express.Router();
 
@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get("/user", async (req, res, next) => {
   try {
-    const users = await User.find({});
+    const users = await db.user.find({});
     res.status(200).json({ users: users });
   } catch (error) {
     res.status(500).send(error.message);
@@ -16,7 +16,7 @@ router.get("/user", async (req, res, next) => {
 
 router.post("/user", jsonParser, async (req, res, next) => {
   try {
-    let new_user = new User({ name: req.body.name, age: req.body.age });
+    let new_user = new db.user({ name: req.body.name, age: req.body.age });
     await new_user.save();
     res.status(200).json(new_user);
   } catch (error) {
