@@ -8,48 +8,49 @@ const SceneSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  type:{ //AR, VR etc..
+  view_type: {
+    //AR, VR etc..
     required: [true, "Scene requires a type"],
     type: String,
-  }
+  },
   description: {
     type: String,
     trim: true,
   },
-  category:{
+  category: {
     type: String,
     trim: true,
   },
-  owner:{
-      type: String,
-      required: [true, "Scene requires a owner"],
-  }
-  is_private:{
+  owner: {
+    type: String,
+    required: [true, "Scene requires a owner"],
+  },
+  is_private: {
     type: Boolean,
     default: 0,
   },
-  password:{
+  password: {
     type: String,
   },
-  content:{
-      object_link: {
-          type: String
-      },
-      thumbnail_link:{
-        type: String
-      },
-      default_skybox_link:{
-          type: String
-      }
+  content: {
+    object_link: {
+      type: String,
+    },
+    thumbnail_link: {
+      type: String,
+    },
+    default_skybox_link: {
+      type: String,
+    },
   },
   created_date: {
-     default: Date.now(),
-     type: Date
+    default: Date.now(),
+    type: Date,
   },
   updated_date: {
-    type: Date
- }
+    type: Date,
+  },
 });
 
-const Scene = mongoose.model("Scene", SceneSchema);
+const Scene = mongoose.model("Scenes", SceneSchema);
 export default Scene;
