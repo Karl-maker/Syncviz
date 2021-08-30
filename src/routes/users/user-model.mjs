@@ -57,7 +57,7 @@ const UserSchema = new mongoose.Schema({
     expire_date: Date,
   },
   is_confirmed: { type: Boolean, default: 0 },
-  registered_at: { type: Date, default: Date.now() },
+  registered_date: { type: Date, default: Date.now() },
 });
 
 const User = mongoose.model("Users", UserSchema);
