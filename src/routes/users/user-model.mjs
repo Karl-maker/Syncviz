@@ -1,13 +1,5 @@
 import mongoose from "mongoose";
 
-//--------CONSTANTS--------------
-const MIN_USERNAME = 6;
-const MAX_USERNAME = 12;
-const MIN_NAME = 1;
-const MAX_NAME = 255;
-const MAX_PASSWORD = 50;
-const MIN_PASSWORD = 8;
-
 //--------------------------------------------------------------------------------
 
 const UserSchema = new mongoose.Schema({
@@ -15,27 +7,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, "A first name is required."],
     trim: true,
-    min: [MIN_NAME, `Name cannot be less than ${MIN_NAME} characters`],
-    max: [MAX_NAME, `Name cannot be more than ${MAX_NAME} characters`],
   },
   last_name: {
     type: String,
     required: [true, "A last name is required."],
     trim: true,
-    min: [MIN_NAME, `Name cannot be less than ${MIN_NAME} characters`],
-    max: [MAX_NAME, `Name cannot be more than ${MAX_NAME} characters`],
   },
   username: {
     type: String,
     required: [true, "A username is required."],
-    min: [
-      MIN_USERNAME,
-      `Username cannot be less than ${MIN_USERNAME} characters`,
-    ],
-    max: [
-      MAX_USERNAME,
-      `Username cannot be more than ${MIN_USERNAME} characters`,
-    ],
+
     unique: true,
     trim: true,
   },
@@ -52,14 +33,6 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, "A password is required."],
-    min: [
-      MIN_PASSWORD,
-      `Password cannot be less than ${MIN_PASSWORD} characters`,
-    ],
-    max: [
-      MAX_PASSWORD,
-      `Password cannot be more than ${MAX_PASSWORD} characters`,
-    ],
   },
   profile_picture: { space: String, link: String, file_name: String },
   login_info: {
