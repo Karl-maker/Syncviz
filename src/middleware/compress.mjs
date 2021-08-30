@@ -56,7 +56,7 @@ export function compressRouter({
 }) {
   contentType = typeof contentType !== undefined ? contentType : "DEFAULT";
   let strategy = compressorStrategy(contentType);
-  logger.info({
+  logger.debug({
     message: `Compress HTTP (req, res) with ${contentType} compressor.`,
     timestamp: `${new Date().toString()}`,
   });

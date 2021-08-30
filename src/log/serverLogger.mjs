@@ -3,7 +3,7 @@ import config from "../config/config.mjs";
 
 const options = {
   file: {
-    level: "info",
+    level: "debug",
     filename: config.debug.LOG_FILE,
     handleExceptions: true,
     json: true,
