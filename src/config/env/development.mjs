@@ -38,6 +38,6 @@ export default {
   },
 
   database: {
-    SEQUELIZE_CONNECT: process.env.DEV_SEQUELIZE_CONNECT,
+    DB_CONNECT: process.env.DEV_DB_CONNECT,
   },
 };

@@ -13,6 +13,7 @@ import httpLogger from "./log/httpLogger.mjs";
 import { corsOrigins } from "./middleware/cors.mjs";
 import { compressRouter } from "./middleware/compress.mjs";
 import appRoutes from "./routes/index.mjs";
+import { connectDB } from "./helpers/db.mjs";
 
 //npm modules
 import express from "express";
@@ -32,8 +33,10 @@ const limiter = rateLimit({
   max: config.optimization.RATE_LIMIT_MAX,
 });
 
-//Middleware
+//Database
+connectDB();
 
+//Middleware
 // GZIP all assets
 app.use((req, res, next) => {
   //depending on content type switch contentType
