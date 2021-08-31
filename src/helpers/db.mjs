@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import logger from "../log/serverLogger.mjs";
+import logger from "../log/server-logger.mjs";
 import config from "../config/config.mjs";
 
 //............. DB MODELS.............................

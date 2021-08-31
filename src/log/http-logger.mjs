@@ -1,6 +1,6 @@
 import morgan from "morgan";
 import json from "morgan-json";
-import logger from "./serverLogger.mjs";
+import logger from "./server-logger.mjs";
 
 //Setup Tokens
 

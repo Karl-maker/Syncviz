@@ -5,15 +5,19 @@ This file will:
 1. create a server using restify module
 2. use a index file from the middleware modules in one line of code
 3. listen on port specified by config.mjs file within config folder
+
+Link to Documentation: https://docs.google.com/document/d/12gGP0TI1YUMk8Vb679H9wEROh_HRRtSpU3-IzjISQ6M/edit#
 */
 
 import config from "./config/config.mjs";
-import logger from "./log/serverLogger.mjs";
-import httpLogger from "./log/httpLogger.mjs";
+import logger from "./log/server-logger.mjs";
+import httpLogger from "./log/http-logger.mjs";
 import { corsOrigins } from "./middleware/cors.mjs";
 import { compressRouter } from "./middleware/compress.mjs";
 import appRoutes from "./routes/index.mjs";
 import { connectDB } from "./helpers/db.mjs";
+import { jsonParser, urlencodedParser } from "./middleware/body-parser.mjs";
+import errorHandler from "./middleware/error-handler.mjs";
 
 //npm modules
 import express from "express";
@@ -47,6 +51,8 @@ app.use((req, res, next) => {
 app.use(httpLogger);
 app.use(helmet());
 app.use(limiter);
+app.use(urlencodedParser);
+app.use(jsonParser);
 app.use(
   cors({
     origin: corsOrigins,
@@ -73,6 +79,8 @@ if (config.environment.NODE_ENV === "production") {
     res.sendFile(INDEX_PATH);
   });
 }
+
+app.use(errorHandler);
 
 app.listen(config.server.PORT, config.server.HOST, () => {
   logger.info({

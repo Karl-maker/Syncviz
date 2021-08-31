@@ -1,6 +1,6 @@
 import zlib from "zlib";
 import compression from "compression";
-import logger from "../log/serverLogger.mjs";
+import logger from "../log/server-logger.mjs";
 import { timeStamp } from "console";
 
 function compressorCheck(compression) {
