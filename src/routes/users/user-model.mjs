@@ -105,7 +105,7 @@ const UserSchema = new mongoose.Schema({
     expire_date: Date,
     select: false,
   },
-  is_confirmed: { type: Boolean, default: 0 },
+  is_confirmed: { type: Boolean, default: 0, select: false },
   registered_date: { type: Date, default: Date.now() },
 });
 
