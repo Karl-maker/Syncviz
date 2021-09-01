@@ -65,6 +65,7 @@ const UserSchema = new mongoose.Schema({
     trim: true,
     minLength: [MIN_EMAIL, `Please use a valid email address`],
     maxLength: [MAX_EMAIL, `Please use a valid email address`],
+    select: false,
   },
   password: {
     type: String,
@@ -77,6 +78,7 @@ const UserSchema = new mongoose.Schema({
       MAX_PASSWORD,
       `Password must have more than ${MAX_PASSWORD} characters`,
     ],
+    select: false,
   },
   profile_picture: { space: String, link: String, file_name: String },
   login_info: {
@@ -85,6 +87,7 @@ const UserSchema = new mongoose.Schema({
       refresh_token: String,
       expire_date: Date,
       created_date: Date,
+      select: false,
     },
     logins: [
       //Limited Number
@@ -93,12 +96,14 @@ const UserSchema = new mongoose.Schema({
         refresh_token: String,
         expire_date: Date,
         created_date: Date,
+        select: false,
       },
     ],
   },
   membership_info: {
     is_premium: Boolean,
     expire_date: Date,
+    select: false,
   },
   is_confirmed: { type: Boolean, default: 0 },
   registered_date: { type: Date, default: Date.now() },

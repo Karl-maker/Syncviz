@@ -5,14 +5,7 @@ const router = express.Router();
 
 //............ROUTES............................................
 
-router.get("/user", async (req, res, next) => {
-  try {
-    const users = await db.user.find({});
-    res.status(200).json({ users: users });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-});
+router.get("/users", getUsers);
 
 router.post("/user", register);
 
@@ -26,6 +19,17 @@ function register(req, res, next) {
     })
     .catch((err) => {
       next(err); //Error Handler
+    });
+}
+
+function getUsers(req, res, next) {
+  userService
+    .getByUsername(req)
+    .then((users) => {
+      res.status(200).json({ users: users, amount: users.length });
+    })
+    .catch((err) => {
+      next(err);
     });
 }
 

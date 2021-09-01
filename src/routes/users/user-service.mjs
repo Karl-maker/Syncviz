@@ -2,8 +2,11 @@ import { db } from "../../helpers/db.mjs";
 import logger from "../../log/server-logger.mjs";
 import bcrypt from "bcrypt";
 
+//To retrieve certain fields https://www.codegrepper.com/code-examples/javascript/mongoose+select+fields
+
 export default {
   create,
+  getByUsername,
 };
 
 //.....Service Functions
@@ -68,4 +71,56 @@ async function create(credentials) {
 
   return;
   // Our register logic ends here
+}
+
+async function getByUsername(parameters) {
+  try {
+    //parameters = req
+    const page_size = parseInt(parameters.query.page_size, 10);
+    const page_number = parameters.query.page_number;
+    const q = parameters.query.q;
+    const order = parameters.query.order;
+
+    var users = [{}];
+
+    //------Pagenation Helpers-------------
+
+    const page = Math.max(0, page_number);
+
+    //------Order Helpers------------------
+
+    var get_order;
+
+    //default
+    if (!order) {
+      get_order = {
+        username: "asc",
+      };
+    } else {
+      get_order = {
+        username: order,
+      };
+    }
+
+    if (!q) {
+      users = await db.user
+        .find({ is_confirmed: true })
+        .skip(page_size * page)
+        .limit(page_size)
+        .sort(get_order); // get all;
+    } else {
+      users = await db.user
+        .find({
+          username: { $regex: `${q}`, $options: "i" },
+          is_confirmed: true,
+        })
+        .limit(page_size)
+        .skip(page_size * page)
+        .sort(get_order); // get all
+    }
+  } catch (e) {
+    throw { name: "UnexpectedError", message: e.message };
+  }
+
+  return users;
 }
