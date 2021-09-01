@@ -83,22 +83,10 @@ const UserSchema = new mongoose.Schema({
   profile_picture: { space: String, link: String, file_name: String },
   login_info: {
     last_login: {
-      ip_address: String,
       refresh_token: String,
-      expire_date: Date,
       created_date: Date,
       select: false,
     },
-    logins: [
-      //Limited Number
-      {
-        ip_address: String,
-        refresh_token: String,
-        expire_date: Date,
-        created_date: Date,
-        select: false,
-      },
-    ],
   },
   membership_info: {
     is_premium: Boolean,

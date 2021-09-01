@@ -1,6 +1,8 @@
 import { db } from "../../helpers/db.mjs";
+import config from "../../config/config.mjs";
 import logger from "../../log/server-logger.mjs";
 import bcrypt from "bcrypt";
+import jwt from "json-web-token";
 
 //To retrieve certain fields https://www.codegrepper.com/code-examples/javascript/mongoose+select+fields
 
@@ -9,9 +11,90 @@ export default {
   _delete,
   getByUsername,
   getOneByUsername,
+  getRefreshToken,
 };
 
 //.....Service Functions
+
+async function getRefreshToken(user) {
+  //get refresh_token and verify it
+
+  try {
+    const last_login = await db.user.findOne(
+      { username: user.username },
+      { login_info: 1 }
+    );
+    const refresh_token = last_login.last_login.refresh_token;
+    jwt.verify(refresh_token, config.jwt.REFRESH_TOKEN_SECRET);
+  } catch (err) {
+    throw { name: "UnauthorizedError" };
+  }
+
+  const access_token = jwt.sign(payload, config.jwt.ACCESS_TOKEN_SECRET, {
+    algorithm: "HS256",
+    expiresIn: config.jwt.ACCESS_TOKEN_LIFE,
+  });
+
+  return access_token;
+}
+
+async function login(credentials) {
+  const username = credentials.username;
+  const password = credentials.password;
+
+  if (!username || !password) {
+    throw { name: "UnauthorizedError", message: "Fill In Fields" };
+  }
+
+  const user = await db.user.findOne(
+    { username: username },
+    { password: 1, is_confirmed: 1 }
+  );
+
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    throw { name: "UnauthorizedError", message: "User is unauthorized" };
+  }
+
+  if (!user.is_confirmed) {
+    throw { name: "NotConfirmed", message: "Email Not Confirmed" };
+  }
+
+  // If they got this far their password is correct... return jwt access_token & save refresh_token
+
+  //payload
+
+  var payload = { username: username };
+
+  //This is to send to user
+
+  const access_token = jwt.sign(payload, config.jwt.ACCESS_TOKEN_SECRET, {
+    algorithm: "HS256",
+    expiresIn: config.jwt.ACCESS_TOKEN_LIFE,
+  });
+
+  const refresh_token = jwt.sign(payload, config.jwt.REFRESH_TOKEN_SECRET, {
+    algorithm: "HS256",
+    expiresIn: config.jwt.REFRESH_TOKEN_LIFE,
+  });
+
+  try {
+    //Store Refresh in database
+
+    await db.user.update(
+      { username: username },
+      {
+        $set: {
+          "login_info.last_login.refresh_token": refresh_token,
+          "login_info.last_login.created_date": Date.now(),
+        },
+      }
+    );
+  } catch (err) {
+    throw { name: "UnexpectedError", message: e.message };
+  }
+
+  return access_token;
+}
 
 async function create(credentials) {
   // Get user input
@@ -105,11 +188,12 @@ async function getByUsername(parameters) {
     }
 
     if (!q) {
-      users = await db.user
-        .find({ is_confirmed: true })
-        .skip(page_size * page)
-        .limit(page_size)
-        .sort(get_order); // get all;
+      // users = await db.user
+      //   .find({ is_confirmed: true })
+      //   .skip(page_size * page)
+      //   .limit(page_size)
+      //   .sort(get_order); // get all;
+      return {};
     } else {
       users = await db.user
         .find({

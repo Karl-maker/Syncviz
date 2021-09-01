@@ -6,12 +6,18 @@ export default errorHandler;
 function errorHandler(err, req, res, next) {
   try {
     switch (true) {
+      case err.name === "NoToken":
+        //No jwt token
+        return res.status(403).json({ message: "Unauthorized" });
       case err.name === "UnauthorizedError":
         // jwt authentication error
         return res.status(401).json({ message: "Unauthorized" });
       case err.name === "NotFound":
         //404 Errors
         return res.status(404).json({ message: err.message });
+      case err.name === "NotConfirmed":
+        //401 Errors
+        return res.status(401).json({ message: err.message });
       case err.name === "BadRequest":
         //400 Errors
         return res.status(400).json({ message: err.message });

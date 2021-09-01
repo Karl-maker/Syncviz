@@ -40,4 +40,14 @@ export default {
   database: {
     DB_CONNECT: process.env.DEV_DB_CONNECT,
   },
+
+  jwt: {
+    IS_HTTPS: process.env.DEV_IS_HTTPS || false, //This is usually false
+    ACCESS_TOKEN_SECRET:
+      process.env.DEV_ACCESS_TOKEN_SECRET || "iphjfwpjnpsefnkwnpiej",
+    ACCESS_TOKEN_LIFE: process.env.DEV_ACCESS_TOKEN_LIFE * 60 || 2 * 60, //In Minutes
+    REFRESH_TOKEN_SECRET:
+      process.env.DEV_ACCESS_TOKEN_SECRET || "wahozpjpjepqjjqesrfskdpe",
+    REFRESH_TOKEN_LIFE: process.env.DEV_REFRESH_TOKEN_LIFE * 60 || 1440 * 60, //In Minutes
+  },
 };

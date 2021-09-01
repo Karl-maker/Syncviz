@@ -22,6 +22,7 @@ import errorHandler from "./middleware/error-handler.mjs";
 //npm modules
 import express from "express";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
 
@@ -53,6 +54,7 @@ app.use(helmet());
 app.use(limiter);
 app.use(urlencodedParser);
 app.use(jsonParser);
+app.use(cookieParser());
 app.use(
   cors({
     origin: corsOrigins,
