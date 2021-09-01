@@ -9,7 +9,9 @@ function errorHandler(err, req, res, next) {
       case err.name === "UnauthorizedError":
         // jwt authentication error
         return res.status(401).json({ message: "Unauthorized" });
-
+      case err.name === "NotFound":
+        //404 Errors
+        return res.status(404).json({ message: err.message });
       case err.name === "BadRequest":
         //400 Errors
         return res.status(400).json({ message: err.message });

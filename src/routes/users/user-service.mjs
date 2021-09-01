@@ -6,7 +6,9 @@ import bcrypt from "bcrypt";
 
 export default {
   create,
+  _delete,
   getByUsername,
+  getOneByUsername,
 };
 
 //.....Service Functions
@@ -124,3 +126,15 @@ async function getByUsername(parameters) {
 
   return users;
 }
+
+async function getOneByUsername(username) {
+  const user = await db.user.findOne({ username: username });
+
+  if (!user) {
+    throw { name: "NotFound", message: `${username} Not Found` };
+  }
+
+  return user;
+}
+
+async function _delete(credentials) {}

@@ -6,8 +6,9 @@ const router = express.Router();
 //............ROUTES............................................
 
 router.get("/users", getUsers);
-
-router.post("/user", register);
+router.get("/user/:username", getUser);
+router.delete("/user", deleteUser); //Use Auth to return user first
+router.post("/user/registration", register);
 
 //---------FUNCTIONS-----------------
 
@@ -19,6 +20,28 @@ function register(req, res, next) {
     })
     .catch((err) => {
       next(err); //Error Handler
+    });
+}
+
+function deleteUser(req, res, next) {
+  userService
+    ._delete(req)
+    .then((results) => {
+      res.status(204).json({ message: "Account Deleted Successfully" });
+    })
+    .catch((err) => {
+      next(err); //Error Handler
+    });
+}
+
+function getUser(req, res, next) {
+  userService
+    .getOneByUsername(req.params.username)
+    .then((user) => {
+      res.status(200).json({ user: user });
+    })
+    .catch((err) => {
+      next(err);
     });
 }
 
