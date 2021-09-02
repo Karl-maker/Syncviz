@@ -12,48 +12,27 @@ activeAuthentication //throws Error
 passiveAuthentication //allows Pass Without User Info
 */
 
-router.get("/users", getUsers);
+router.get("/users", authorize, getUsers);
 router.get("/user/:username", getUser);
-router.delete("/user", deleteUser); //Use Auth to return user first
-router.post("/user/registration", register);
+router.post("/user/register", register);
 router.post("/user/login", login);
-router.get("/user", authorize, getCurrentUser);
-router.get("/user/access-token", authorize, getRefreshToken);
 
 //---------FUNCTIONS-----------------
-
-function getRefreshToken(req, res, next) {
-  userService
-    .getRefreshToken(req.user)
-    .then((access_token) => {
-      res
-        .cookie("jwt", access_token, {
-          secure: config.jwt.IS_HTTPS,
-          httpOnly: true,
-        })
-        .status(200)
-        .json({ message: "Access Token Recieved" });
-    })
-    .catch((err) => {
-      next(err);
-    });
-}
-
-function getCurrentUser(req, res, next) {
-  res.status(200).json(req.user);
-}
 
 function login(req, res, next) {
   userService
     .login(req.body)
-    .then((access_token) => {
+    .then((results) => {
       res
-        .cookie("jwt", access_token, {
+        .cookie("jwt", results.refresh_token, {
           secure: config.jwt.IS_HTTPS,
           httpOnly: true,
         })
         .status(200)
-        .json({ message: "Login Sucessful" });
+        .json({
+          access_token: results.access_token,
+          message: "Login Successful",
+        });
     })
     .catch((err) => {
       next(err);

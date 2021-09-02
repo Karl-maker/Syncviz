@@ -1,19 +1,36 @@
-import jwt from "json-web-token";
 import config from "../config/config.mjs";
 import { db } from "../helpers/db.mjs";
+import jwt from "jsonwebtoken";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const authorize = async (req, res, next) => {
-  let access_token = req.cookies.jwt;
+  // Header names in Express are auto-converted to lowercase
+  let access_token =
+    req.headers["x-access-token"] || req.headers["authorization"];
 
-  if (!access_token) {
-    next({ name: "NoToken", message: "Unauthorized" });
-  }
-
-  let payload;
+  // Remove Bearer from string
+  access_token = access_token.replace(/^Bearer\s+/, "");
 
   try {
-    payload = jwt.verify(access_token, config.jwt.ACCESS_TOKEN_SECRET);
-    req.user = await db.user.findOne({ username: payload.username });
+    //Get Key
+    const ACCESS_TOKEN_PUBLIC_KEY = fs.readFileSync(
+      path.resolve(__dirname, `../../${config.jwt.ACCESS_TOKEN_PUBLIC_KEY}`),
+      "utf8"
+    );
+
+    const payload = jwt.verify(access_token, ACCESS_TOKEN_PUBLIC_KEY, {
+      issuer: config.jwt.ISSUER,
+      subject: req.body.username,
+      audience: req.body.origin,
+      expiresIn: config.jwt.ACCESS_TOKEN_LIFE,
+      algorithm: [config.jwt.ALGORITHM],
+    });
+
+    req.user = await db.user.findOne({ _id: payload.id });
     next();
   } catch (err) {
     next({ name: "UnauthorizedError" });

@@ -1,8 +1,15 @@
+"use strict";
+
 import { db } from "../../helpers/db.mjs";
 import config from "../../config/config.mjs";
 import logger from "../../log/server-logger.mjs";
 import bcrypt from "bcrypt";
-import jwt from "json-web-token";
+import jwt from "jsonwebtoken";
+import fs from "fs";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 //To retrieve certain fields https://www.codegrepper.com/code-examples/javascript/mongoose+select+fields
 
@@ -11,36 +18,15 @@ export default {
   _delete,
   getByUsername,
   getOneByUsername,
-  getRefreshToken,
+  login,
 };
 
 //.....Service Functions
 
-async function getRefreshToken(user) {
-  //get refresh_token and verify it
-
-  try {
-    const last_login = await db.user.findOne(
-      { username: user.username },
-      { login_info: 1 }
-    );
-    const refresh_token = last_login.last_login.refresh_token;
-    jwt.verify(refresh_token, config.jwt.REFRESH_TOKEN_SECRET);
-  } catch (err) {
-    throw { name: "UnauthorizedError" };
-  }
-
-  const access_token = jwt.sign(payload, config.jwt.ACCESS_TOKEN_SECRET, {
-    algorithm: "HS256",
-    expiresIn: config.jwt.ACCESS_TOKEN_LIFE,
-  });
-
-  return access_token;
-}
-
-async function login(credentials) {
-  const username = credentials.username;
-  const password = credentials.password;
+async function login(input) {
+  const username = input.username;
+  const password = input.password;
+  const origin = input.origin;
 
   if (!username || !password) {
     throw { name: "UnauthorizedError", message: "Fill In Fields" };
@@ -61,39 +47,47 @@ async function login(credentials) {
 
   // If they got this far their password is correct... return jwt access_token & save refresh_token
 
-  //payload
-
-  var payload = { username: username };
-
-  //This is to send to user
-
-  const access_token = jwt.sign(payload, config.jwt.ACCESS_TOKEN_SECRET, {
-    algorithm: "HS256",
-    expiresIn: config.jwt.ACCESS_TOKEN_LIFE,
-  });
-
-  const refresh_token = jwt.sign(payload, config.jwt.REFRESH_TOKEN_SECRET, {
-    algorithm: "HS256",
-    expiresIn: config.jwt.REFRESH_TOKEN_LIFE,
-  });
-
   try {
-    //Store Refresh in database
+    const payload = {
+      id: user._id,
+    };
 
-    await db.user.update(
-      { username: username },
-      {
-        $set: {
-          "login_info.last_login.refresh_token": refresh_token,
-          "login_info.last_login.created_date": Date.now(),
-        },
-      }
+    const ACCESS_TOKEN_PRIVATE_KEY = fs.readFileSync(
+      path.resolve(__dirname, `../../..${config.jwt.ACCESS_TOKEN_PRIVATE_KEY}`),
+      "utf8"
     );
-  } catch (err) {
-    throw { name: "UnexpectedError", message: e.message };
-  }
 
-  return access_token;
+    const REFRESH_TOKEN_PRIVATE_KEY = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        `../../..${config.jwt.REFRESH_TOKEN_PRIVATE_KEY}`
+      ),
+      "utf8"
+    );
+
+    const access_token = jwt.sign(payload, ACCESS_TOKEN_PRIVATE_KEY, {
+      issuer: config.jwt.ISSUER,
+      subject: username,
+      audience: [origin],
+      expiresIn: config.jwt.ACCESS_TOKEN_LIFE,
+      algorithm: config.jwt.ALGORITHM,
+    });
+
+    const refresh_token = jwt.sign(payload, REFRESH_TOKEN_PRIVATE_KEY, {
+      issuer: config.jwt.ISSUER,
+      subject: username,
+      audience: [origin],
+      expiresIn: config.jwt.REFRESH_TOKEN_LIFE,
+      algorithm: config.jwt.ALGORITHM,
+    });
+
+    return {
+      access_token: access_token,
+      refresh_token: refresh_token,
+    };
+  } catch (err) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
 }
 
 async function create(credentials) {
@@ -222,3 +216,5 @@ async function getOneByUsername(username) {
 }
 
 async function _delete(credentials) {}
+
+//----------Utilites--------------

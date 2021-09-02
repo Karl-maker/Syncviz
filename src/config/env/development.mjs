@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import fs from "fs";
 dotenv.config();
 
 export default {
@@ -42,12 +43,18 @@ export default {
   },
 
   jwt: {
+    ISSUER: process.env.DEV_ISSUER || "Syncviz Company",
+    ALGORITHM: process.env.DEV_ALGORITHM || "RS256",
     IS_HTTPS: process.env.DEV_IS_HTTPS || false, //This is usually false
-    ACCESS_TOKEN_SECRET:
-      process.env.DEV_ACCESS_TOKEN_SECRET || "iphjfwpjnpsefnkwnpiej",
-    ACCESS_TOKEN_LIFE: process.env.DEV_ACCESS_TOKEN_LIFE * 60 || 2 * 60, //In Minutes
-    REFRESH_TOKEN_SECRET:
-      process.env.DEV_ACCESS_TOKEN_SECRET || "wahozpjpjepqjjqesrfskdpe",
-    REFRESH_TOKEN_LIFE: process.env.DEV_REFRESH_TOKEN_LIFE * 60 || 1440 * 60, //In Minutes
+    REFRESH_TOKEN_LIFE: process.env.DEV_REFRESH_TOKEN_LIFE || "30d",
+    ACCESS_TOKEN_LIFE: process.env.DEV_ACCESS_TOKEN_LIFE || "120s",
+    ACCESS_TOKEN_PUBLIC_KEY:
+      process.env.DEV_ACCESS_TOKEN_PUBLIC_KEY || "/keys/access-public.key",
+    ACCESS_TOKEN_PRIVATE_KEY:
+      process.env.DEV_ACCESS_TOKEN_PRIVATE_KEY || "/keys/access-private.key",
+    REFRESH_TOKEN_PUBLIC_KEY:
+      process.env.DEV_REFRESH_TOKEN_PUBLIC_KEY || "/keys/refresh-public.key",
+    REFRESH_TOKEN_PRIVATE_KEY:
+      process.env.DEV_REFRESH_TOKEN_PRIVATE_KEY || "/keys/refresh-private.key",
   },
 };
