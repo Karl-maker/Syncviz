@@ -1,5 +1,4 @@
 import express from "express";
-import { db } from "../../helpers/db.mjs";
 import userService from "./user-service.mjs";
 import config from "../../config/config.mjs";
 import authorize from "../../middleware/authorization.mjs";
@@ -12,10 +11,13 @@ activeAuthentication //throws Error
 passiveAuthentication //allows Pass Without User Info
 */
 
-router.get("/users", authorize, getUsers);
-router.get("/user/:username", getUser);
+router.get("/user/authorize", getAccessToken);
 router.post("/user/register", register);
-router.post("/user/login", login);
+router.post("/user/authenticate", login);
+//---------UNPROTECTED-------------------
+router.delete("/user", authorize, deleteUser);
+router.get("/users", authorize, getUsers);
+router.get("/user/:username", authorize, getUser);
 
 //---------FUNCTIONS-----------------
 
@@ -24,13 +26,19 @@ function login(req, res, next) {
     .login(req.body)
     .then((results) => {
       res
-        .cookie("jwt", results.refresh_token, {
+        .cookie("refresh_token", results.refresh_token.token, {
           secure: config.jwt.IS_HTTPS,
           httpOnly: true,
+          //sameSite: true,
+          expires: results.refresh_token.expires,
+          path: "/api",
         })
         .status(200)
         .json({
-          access_token: results.access_token,
+          access_token: {
+            token: results.access_token.token,
+            expires: results.access_token.expires,
+          },
           message: "Login Successful",
         });
     })
@@ -53,11 +61,28 @@ function register(req, res, next) {
 function deleteUser(req, res, next) {
   userService
     ._delete(req)
-    .then((results) => {
+    .then(() => {
       res.status(204).json({ message: "Account Deleted Successfully" });
     })
     .catch((err) => {
       next(err); //Error Handler
+    });
+}
+
+function getAccessToken(req, res, next) {
+  userService
+    .getAccessToken(req)
+    .then((results) => {
+      res.status(200).json({
+        access_token: {
+          token: results.access_token.token,
+          expires: results.access_token.expires,
+        },
+        message: "Token Received",
+      });
+    })
+    .catch((err) => {
+      next(err);
     });
 }
 

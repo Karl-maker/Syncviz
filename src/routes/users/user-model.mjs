@@ -81,15 +81,8 @@ const UserSchema = new mongoose.Schema({
     select: false,
   },
   profile_picture: { space: String, link: String, file_name: String },
-  login_info: {
-    last_login: {
-      refresh_token: String,
-      created_date: Date,
-      select: false,
-    },
-  },
   membership_info: {
-    is_premium: Boolean,
+    is_premium: { type: Boolean, default: false },
     expire_date: Date,
     select: false,
   },

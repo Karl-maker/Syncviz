@@ -18,6 +18,7 @@ export default {
   _delete,
   getByUsername,
   getOneByUsername,
+  getAccessToken,
   login,
 };
 
@@ -69,7 +70,7 @@ async function login(input) {
       issuer: config.jwt.ISSUER,
       subject: username,
       audience: [origin],
-      expiresIn: config.jwt.ACCESS_TOKEN_LIFE,
+      expiresIn: `${config.jwt.ACCESS_TOKEN_LIFE * 60}s`,
       algorithm: config.jwt.ALGORITHM,
     });
 
@@ -77,13 +78,32 @@ async function login(input) {
       issuer: config.jwt.ISSUER,
       subject: username,
       audience: [origin],
-      expiresIn: config.jwt.REFRESH_TOKEN_LIFE,
+      expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
       algorithm: config.jwt.ALGORITHM,
     });
 
-    return {
-      access_token: access_token,
+    const refresh_expire = new Date(
+      Date.now() + config.jwt.REFRESH_TOKEN_LIFE * 24 * 60 * 60 * 1000
+    ); //first digit for days
+    const access_expire = config.jwt.ACCESS_TOKEN_LIFE;
+
+    //Delete latest login if they're 4 and save this one
+
+    const login_amount = await db.login.count({ user_id: user._id });
+
+    if (login_amount > 4) {
+      await db.login.findOneAndDelete({ user_id: user._id });
+    }
+
+    await db.login.create({
       refresh_token: refresh_token,
+      user_id: user._id,
+      expire_date: refresh_expire,
+    });
+
+    return {
+      access_token: { token: access_token, expires: access_expire },
+      refresh_token: { token: refresh_token, expires: refresh_expire },
     };
   } catch (err) {
     throw { name: "UnexpectedError", message: err.message };
@@ -152,6 +172,84 @@ async function create(credentials) {
   // Our register logic ends here
 }
 
+async function getAccessToken(req) {
+  //Verify Token
+
+  try {
+    //Get Key
+    const REFRESH_TOKEN_PUBLIC_KEY = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        `../../../${config.jwt.REFRESH_TOKEN_PUBLIC_KEY}`
+      ),
+      "utf8"
+    );
+
+    const ACCESS_TOKEN_PRIVATE_KEY = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        `../../../${config.jwt.ACCESS_TOKEN_PRIVATE_KEY}`
+      ),
+      "utf8"
+    );
+
+    const payload = jwt.verify(
+      req.cookies["refresh_token"],
+      REFRESH_TOKEN_PUBLIC_KEY,
+      {
+        issuer: config.jwt.ISSUER,
+        subject: req.body.username, //Stored In Local Storage
+        audience: req.body.origin, //Stored In Local Storage
+        expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
+        algorithm: [config.jwt.ALGORITHM],
+      }
+    );
+
+    if (!payload) {
+      throw { name: "UnauthorizedError" };
+    }
+
+    const login_info = await db.login.findOne({
+      user_id: payload.id,
+      refresh_token: req.cookies["refresh_token"],
+    });
+
+    //Check if login expire
+
+    if (new Date(login_info.expire_date).valueOf() < new Date().valueOf()) {
+      await db.login.findOneAndDelete({
+        user_id: payload.id,
+        refresh_token: req.cookies["refresh_token"],
+      });
+      throw { name: "UnauthorizedError" };
+    }
+
+    //Get New Token
+
+    const access_token = jwt.sign(
+      { id: payload.id },
+      ACCESS_TOKEN_PRIVATE_KEY,
+      {
+        issuer: config.jwt.ISSUER,
+        subject: req.body.username,
+        audience: [req.body.origin],
+        expiresIn: `${config.jwt.ACCESS_TOKEN_LIFE * 60}s`,
+        algorithm: config.jwt.ALGORITHM,
+      }
+    );
+
+    const access_expire = config.jwt.ACCESS_TOKEN_LIFE;
+
+    return {
+      access_token: { token: access_token, expires: access_expire },
+    };
+  } catch (err) {
+    throw { message: err.message };
+  }
+
+  //Check In Database
+}
+
 async function getByUsername(parameters) {
   try {
     //parameters = req
@@ -215,6 +313,21 @@ async function getOneByUsername(username) {
   return user;
 }
 
-async function _delete(credentials) {}
+async function _delete(req) {
+  const password = req.body.password;
 
-//----------Utilites--------------
+  //Compare Passwords
+
+  const user = await db.user.findOne(
+    { username: req.user.username },
+    { password: 1 }
+  );
+
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    throw { name: "UnauthorizedError", message: "User is unauthorized" };
+  }
+
+  await db.user.findOneAndDelete({ username: req.user.username });
+
+  return;
+}

@@ -8,6 +8,7 @@ import user from "../routes/users/user-model.mjs";
 import scene from "../routes/scenes/scene-model.mjs";
 import share from "../routes/shares/share-model.mjs";
 import notification from "../routes/notifications/notification-model.mjs";
+import login from "../routes/logins/login-model.mjs";
 
 // Create the database connection
 
@@ -71,4 +72,5 @@ export const db = {
   scene: scene,
   share: share,
   notification: notification,
+  login: login,
 };

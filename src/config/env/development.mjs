@@ -46,8 +46,8 @@ export default {
     ISSUER: process.env.DEV_ISSUER || "Syncviz Company",
     ALGORITHM: process.env.DEV_ALGORITHM || "RS256",
     IS_HTTPS: process.env.DEV_IS_HTTPS || false, //This is usually false
-    REFRESH_TOKEN_LIFE: process.env.DEV_REFRESH_TOKEN_LIFE || "30d",
-    ACCESS_TOKEN_LIFE: process.env.DEV_ACCESS_TOKEN_LIFE || "120s",
+    REFRESH_TOKEN_LIFE: process.env.DEV_REFRESH_TOKEN_LIFE || 90,
+    ACCESS_TOKEN_LIFE: process.env.DEV_ACCESS_TOKEN_LIFE || 2,
     ACCESS_TOKEN_PUBLIC_KEY:
       process.env.DEV_ACCESS_TOKEN_PUBLIC_KEY || "/keys/access-public.key",
     ACCESS_TOKEN_PRIVATE_KEY:

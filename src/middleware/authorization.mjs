@@ -26,7 +26,7 @@ const authorize = async (req, res, next) => {
       issuer: config.jwt.ISSUER,
       subject: req.body.username,
       audience: req.body.origin,
-      expiresIn: config.jwt.ACCESS_TOKEN_LIFE,
+      expiresIn: `${config.jwt.ACCESS_TOKEN_LIFE * 60}s`,
       algorithm: [config.jwt.ALGORITHM],
     });
 
