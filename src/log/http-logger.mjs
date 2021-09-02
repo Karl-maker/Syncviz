@@ -6,13 +6,15 @@ import logger from "./server-logger.mjs";
 
 morgan.token(
   "ip",
-  (req) => req.headers["x-forwarded-for"] || req.connection.remoteAddress
+  (req) =>
+    (req.headers["x-forwarded-for"] || "").split(",").pop().trim() ||
+    req.socket.remoteAddress
 );
 morgan.token("user", (req) => {
   if (req.user) {
     return req.user.username;
   }
-  return "no user data";
+  return "Unauthorized";
 });
 
 //Logger format

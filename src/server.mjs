@@ -57,7 +57,7 @@ app.use(jsonParser);
 app.use(cookieParser());
 app.use(
   cors({
-    origin: corsOrigins,
+    origin: corsOrigins.origin,
     optionSuccessStatus: 200,
   })
 );
@@ -85,6 +85,7 @@ if (config.environment.NODE_ENV === "production") {
 app.use(errorHandler);
 
 app.listen(config.server.PORT, config.server.HOST, () => {
+  //192.168.0.13:PORT
   logger.info({
     message: `Server Started and Listening on ${config.server.HOST}:${config.server.PORT} in a ${config.environment.NODE_ENV} environment`,
     timestamp: `${new Date().toString()}`,

@@ -6,7 +6,7 @@ export default {
   //Server API:
   server: {
     HOST: process.env.DEV_API_HOST || "localhost",
-    PORT: process.env.DEV_API_PORT || 8080,
+    PORT: process.env.DEV_API_PORT || 3000,
   },
 
   optimization: {

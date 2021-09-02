@@ -2,6 +2,7 @@ import express from "express";
 import userService from "./user-service.mjs";
 import config from "../../config/config.mjs";
 import authorize from "../../middleware/authorization.mjs";
+import rateLimit from "express-rate-limit";
 const router = express.Router();
 
 //............ROUTES............................................
@@ -11,9 +12,30 @@ activeAuthentication //throws Error
 passiveAuthentication //allows Pass Without User Info
 */
 
-router.get("/user/authorize", getAccessToken);
-router.post("/user/register", register);
-router.post("/user/authenticate", login);
+router.get(
+  "/user/authorize",
+  rateLimit({
+    windowMs: config.jwt.ACCESS_TOKEN_LIFE * 60 * 1000,
+    max: 5, //No Constant Refreshes
+  }),
+  getAccessToken
+);
+router.post(
+  "/user/register",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+  }),
+  register
+);
+router.post(
+  "/user/authenticate",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+  }),
+  login
+);
 //---------UNPROTECTED-------------------
 router.delete("/user", authorize, deleteUser);
 router.get("/users", authorize, getUsers);
