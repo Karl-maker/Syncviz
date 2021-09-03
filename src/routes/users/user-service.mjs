@@ -20,26 +20,42 @@ export default {
   getByUsername,
   getOneByUsername,
   getAccessToken,
-  getConfirmationEmail,
+  getResetPasswordLink,
   confirmUserEmail,
+  setUserPassword,
+  resetPassword,
   login,
 };
 
-//.....Service Functions
+//.....Service Functions: ONLY req
 
-async function login(input) {
-  const username = input.username;
-  const password = input.password;
-  const origin = input.origin;
+async function login(req) {
+  const username = req.body.username;
+  const password = req.body.password;
+  const origin = req.body.origin;
+  const email = req.body.email;
 
-  if (!username || !password) {
+  if ((!username && !email) || !password) {
     throw { name: "UnauthorizedError", message: "Fill In Fields" };
   }
 
-  const user = await db.user.findOne(
-    { username: username },
-    { password: 1, is_confirmed: 1, email: 1, username: 1, first_name: 1 }
-  );
+  var user;
+
+  //Email OR Username
+
+  if (!username) {
+    //Email Login
+    user = await db.user.findOne(
+      { email: email },
+      { password: 1, is_confirmed: 1, email: 1, username: 1, first_name: 1 }
+    );
+  } else {
+    //Username Login
+    user = await db.user.findOne(
+      { username: username },
+      { password: 1, is_confirmed: 1, email: 1, username: 1, first_name: 1 }
+    );
+  }
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw { name: "UnauthorizedError", message: "User is unauthorized" };
@@ -64,17 +80,17 @@ async function login(input) {
     const ACCESS_TOKEN_PRIVATE_KEY = config.jwt.ACCESS_TOKEN_PRIVATE_KEY;
     const REFRESH_TOKEN_PRIVATE_KEY = config.jwt.REFRESH_TOKEN_PRIVATE_KEY;
 
-    const access_token = jwt.sign(payload, ACCESS_TOKEN_PRIVATE_KEY, {
+    const access_token = await jwt.sign(payload, ACCESS_TOKEN_PRIVATE_KEY, {
       issuer: config.jwt.ISSUER,
-      subject: username,
+      subject: user.username,
       audience: [origin],
       expiresIn: `${config.jwt.ACCESS_TOKEN_LIFE * 60}s`,
       algorithm: config.jwt.ALGORITHM,
     });
 
-    const refresh_token = jwt.sign(payload, REFRESH_TOKEN_PRIVATE_KEY, {
+    const refresh_token = await jwt.sign(payload, REFRESH_TOKEN_PRIVATE_KEY, {
       issuer: config.jwt.ISSUER,
-      subject: username,
+      subject: user.username,
       audience: [origin],
       expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
       algorithm: config.jwt.ALGORITHM,
@@ -108,23 +124,93 @@ async function login(input) {
   }
 }
 
-async function confirmUserEmail(data) {
-  const PIN = data.code;
-  const username = data.username;
+async function confirmUserEmail(req) {
+  const PIN = req.body.code;
+  const username = req.body.username;
+  const email = req.body.email;
 
-  const user = db.user.findOne({ username: username });
+  var user;
 
-  if (new Date(user.confirmation_expiration).valueOf() > new Date().valueOf()) {
+  if (!username) {
+    user = await db.user.findOne({ email: email });
+  } else {
+    user = await db.user.findOne({ username: username });
+  }
+
+  if (new Date(user.token_expiration).valueOf() > new Date().valueOf()) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
+
+  try {
+    if (!username) {
+      user = await db.user.findOneAndUpdate(
+        { email: email, token_code: PIN },
+        {
+          is_confirmed: true,
+          token_code: null,
+          token_expiration: null,
+        }
+      );
+    } else {
+      user = await db.user.findOneAndUpdate(
+        { username: username, token_code: PIN },
+        {
+          is_confirmed: true,
+          token_code: null,
+          token_expiration: null,
+        }
+      );
+    }
+  } catch (err) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
+
+  return;
+}
+
+async function resetPassword(req) {
+  const PIN = req.body.code;
+  const username = req.body.username;
+  const email = req.body.email;
+
+  if (!username && !email) {
+    throw { name: "UnauthorizedError", message: "Fill In Fields" };
+  }
+
+  if (req.body.confirm_password !== req.body.new_password) {
+    throw {
+      name: "ValidationError",
+      message: {
+        prompt: "Validation Error",
+        field: { confirmed_password: "Passwords must match" },
+      },
+    };
+  }
+  var user;
+
+  if (!username) {
+    user = await db.user.findOne(
+      { email: email },
+      { password: 1, email: 1, token_expiration: 1, username: 1 }
+    );
+  } else {
+    user = await db.user.findOne(
+      { username: username },
+      { password: 1, email: 1, token_expiration: 1, username: 1 }
+    );
+  }
+
+  if (new Date(user.token_expiration).valueOf() > new Date().valueOf()) {
     throw { name: "UnexpectedError", message: err.message };
   }
 
   try {
     await db.user.findOneAndUpdate(
-      { username: username, confirmation_pin: PIN },
+      { username: user.username, token_code: PIN },
       {
-        is_confirmed: true,
-        confirmation_pin: null,
-        confirmation_expiration: null,
+        password: await bcrypt.hash(req.body.new_password, 10),
+        token_code: null,
+        token_expiration: null,
       }
     );
   } catch (err) {
@@ -134,7 +220,7 @@ async function confirmUserEmail(data) {
   return;
 }
 
-async function create(credentials) {
+async function create(req) {
   // Get user input
   const {
     first_name,
@@ -143,7 +229,7 @@ async function create(credentials) {
     password,
     confirmed_password,
     username,
-  } = credentials;
+  } = req.body;
 
   //Check Password
   if (confirmed_password !== password) {
@@ -263,59 +349,15 @@ async function getAccessToken(req) {
   } catch (err) {
     throw { message: err.message };
   }
-
-  //Check In Database
 }
 
-async function getConfirmationEmail(user) {
-  /*
-  1. Get username
-  2. Find user 
-  3. Get Email
-  4. Generate PIN
-  - Store PIN against user in DB
-  5. Send Email
-  6. Return Email in a STRING
-  */
-
-  const PIN = await Math.floor(100000 + Math.random() * 900000); //Generate PIN
-
-  try {
-    await db.user.findOneAndUpdate(
-      { username: user.username },
-      {
-        confirmation_pin: PIN,
-        confirmation_expiration: new Date(Date.now() + 1 * 60 * 1000),
-      }
-    );
-  } catch (err) {
-    throw { name: "UnexpectedError", message: err.message };
-  }
-
-  try {
-    await sendEmail({
-      subject: "Confirm Email",
-      message: `Hi ${
-        user.first_name || user.username
-      }, your confirmation code is ${PIN}`,
-      email: user.email,
-    });
-  } catch (err) {
-    throw { name: "UnexpectedError", message: err.message };
-  }
-
-  return `Hi ${
-    user.first_name || user.username
-  }, your confirmation code has been sent to your Email`;
-}
-
-async function getByUsername(parameters) {
+async function getByUsername(req) {
   try {
     //parameters = req
-    const page_size = parseInt(parameters.query.page_size, 10);
-    const page_number = parameters.query.page_number;
-    const q = parameters.query.q;
-    const order = parameters.query.order;
+    const page_size = parseInt(req.query.page_size, 10);
+    const page_number = req.query.page_number;
+    const q = req.query.q;
+    const order = req.query.order;
 
     var users = [{}];
 
@@ -362,14 +404,83 @@ async function getByUsername(parameters) {
   return users;
 }
 
-async function getOneByUsername(username) {
-  const user = await db.user.findOne({ username: username });
+async function getOneByUsername(req) {
+  const user = await db.user.findOne({ username: req.params.username });
 
   if (!user) {
-    throw { name: "NotFound", message: `${username} Not Found` };
+    throw { name: "NotFound", message: `${req.params.username} Not Found` };
   }
 
   return user;
+}
+
+async function setUserPassword(req) {
+  var current;
+  try {
+    current = await db.user.findOne(
+      { username: req.user.username },
+      { password: 1 }
+    );
+  } catch (err) {
+    throw { message: "Unexpected Error With Database Retrieval" };
+  }
+
+  if (!(await bcrypt.compare(req.body.current_password, current.password))) {
+    throw { name: "UnauthorizedError", message: "Password is incorrect" };
+  }
+
+  if (req.body.new_password !== req.body.confirm_password) {
+    throw { name: "UnauthorizedError", message: "Passwords must match" };
+  }
+
+  await setPassword(req.body.new_password, req.user._id);
+
+  return;
+}
+
+async function getResetPasswordLink(req) {
+  var username = req.body.username;
+  const email = req.body.email;
+
+  if (!username && !email) {
+    throw { name: "UnauthorizedError", message: "Fill In Fields" };
+  }
+
+  var user;
+
+  //Email OR Username
+  user = await db.user.findOne(
+    { username: username },
+    { is_confirmed: 1, email: 1, username: 1, first_name: 1 }
+  );
+
+  if (!user.email) {
+    user = await db.user.findOne(
+      { email: email },
+      { is_confirmed: 1, email: 1, username: 1, first_name: 1 }
+    );
+  }
+
+  if (!user.email) {
+    throw { name: "UnauthorizedError" };
+  }
+
+  //Create PIN
+
+  const PIN = (Math.random() + 1).toString(36).substring(5);
+
+  await db.user.findOneAndUpdate(
+    { username: user.username },
+    { token_code: PIN, token_expiration: new Date(Date.now() + 1 * 60 * 1000) }
+  );
+
+  await sendEmail({
+    subject: "Reset Password",
+    message: `Click Link to Reset Password: ${config.client.PROTOCOL}://${config.client.HOST}:${config.client.PORT}/reset-password/${PIN}`,
+    email: user.email,
+  });
+
+  return;
 }
 
 async function _delete(req) {
@@ -400,4 +511,53 @@ async function sendEmail({ subject, message, email }) {
     subject: subject,
     html: message,
   });
+}
+
+async function setPassword(password, id) {
+  return await db.user.findOneAndUpdate(
+    { _id: id },
+    { password: await bcrypt.hash(password, 10) }
+  );
+}
+
+async function getConfirmationEmail(user) {
+  /*
+  1. Get username
+  2. Find user 
+  3. Get Email
+  4. Generate PIN
+  - Store PIN against user in DB
+  5. Send Email
+  6. Return Email in a STRING
+  */
+
+  const PIN = await (Math.random() + 1).toString(36).substring(5);
+
+  try {
+    await db.user.findOneAndUpdate(
+      { username: user.username },
+      {
+        token_code: PIN,
+        token_expiration: new Date(Date.now() + 1 * 60 * 1000),
+      }
+    );
+  } catch (err) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
+
+  try {
+    await sendEmail({
+      subject: "Confirm Email",
+      message: `Hi ${
+        user.first_name || user.username
+      }, your confirmation code is ${PIN}`,
+      email: user.email,
+    });
+  } catch (err) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
+
+  return `Hi ${
+    user.first_name || user.username
+  }, your confirmation code has been sent to your Email`;
 }

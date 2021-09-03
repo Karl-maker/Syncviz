@@ -8,21 +8,45 @@ function errorHandler(err, req, res, next) {
     switch (true) {
       case err.name === "NoToken":
         //No jwt token
+        logger.debug({
+          message: err.message,
+          timestamp: new Date().toString(),
+        });
         return res.status(403).json({ message: "Unauthorized" });
       case err.name === "UnauthorizedError":
         // jwt authentication error
+        logger.debug({
+          message: err.message,
+          timestamp: new Date().toString(),
+        });
         return res.status(401).json({ message: "Unauthorized" });
       case err.name === "NotFound":
         //404 Errors
+        logger.debug({
+          message: err.message,
+          timestamp: new Date().toString(),
+        });
         return res.status(404).json({ message: err.message });
       case err.name === "NotConfirmed":
         //401 Errors
+        logger.debug({
+          message: err.message,
+          timestamp: new Date().toString(),
+        });
         return res.status(401).json({ message: err.message });
       case err.name === "BadRequest":
         //400 Errors
+        logger.debug({
+          message: err.message,
+          timestamp: new Date().toString(),
+        });
         return res.status(400).json({ message: err.message });
       case err.name === "AlreadyExist":
         //402 Errors
+        logger.debug({
+          message: err.message,
+          timestamp: new Date().toString(),
+        });
         return res.status(402).json({ message: err.message });
       case err.name === "ValidationError":
         //400 Errors

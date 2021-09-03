@@ -15,8 +15,16 @@ const readENVFile = (location) => {
 export default {
   //Server API:
   server: {
-    HOST: process.env.DEV_API_HOST || "localhost",
+    PROTOCOL: process.env.DEV_PROTOCOL || "http",
+    HOST: process.env.DEV_API_HOST || "0.0.0.0",
     PORT: process.env.DEV_API_PORT || 3000,
+  },
+
+  client: {
+    //In terms of referencing from server
+    PROTOCOL: process.env.DEV_PROTOCOL || "http",
+    HOST: process.env.DEV_CLIENT_HOST || "192.168.0.13",
+    PORT: process.env.DEV_CLIENT_PORT || 3000,
   },
 
   optimization: {

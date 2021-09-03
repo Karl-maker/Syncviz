@@ -6,12 +6,7 @@ import rateLimit from "express-rate-limit";
 const router = express.Router();
 
 //............ROUTES............................................
-
-/*
-activeAuthentication //throws Error
-passiveAuthentication //allows Pass Without User Info
-*/
-
+//cookie: refresh_token, body: {username, origin}
 router.get(
   "/user/authorize",
   rateLimit({
@@ -20,6 +15,7 @@ router.get(
   }),
   getAccessToken
 );
+//body: {first_name, last_name, email, username, password, confirmed_password}
 router.post(
   "/user/register",
   rateLimit({
@@ -28,6 +24,7 @@ router.post(
   }),
   register
 );
+//body: {password, origin, username || email}
 router.post(
   "/user/authenticate",
   rateLimit({
@@ -36,6 +33,7 @@ router.post(
   }),
   login
 );
+//body: {code, username || email}
 router.post(
   "/user/confirm-email",
   rateLimit({
@@ -44,16 +42,81 @@ router.post(
   }),
   confirmUserEmail
 );
+//body: {username || email}
+router.get(
+  "/user/reset-password",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 2,
+  }),
+  resetPasswordEmail
+);
+//body: {code, username || email, new_password, confirm_password}
+router.post(
+  "/user/reset-password",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+  }),
+  resetPassword
+);
+
 //---------PROTECTED-------------------
+//query: {page_size, page_number, q, order}
+router.get("/users", getUsers);
 router.get("/user", authorize, getCurrent);
+//body: {password}
 router.delete("/user", authorize, deleteUser);
-router.get("/users", authorize, getUsers);
+//params: username
 router.get("/user/:username", authorize, getUser);
+//body: {current_password, new_password, confirm_password}
+router.patch(
+  "/user/password",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+  }),
+  authorize,
+  updatePassword
+);
 //---------FUNCTIONS-----------------
+
+function resetPasswordEmail(req, res, next) {
+  userService
+    .getResetPasswordLink(req)
+    .then(() => {
+      res.status(200).json({ message: "Check Email" });
+    })
+    .catch((err) => {
+      next(err);
+    });
+}
+
+function resetPassword(req, res, next) {
+  userService
+    .resetPassword(req)
+    .then(() => {
+      res.status(200).json({ message: "Password Updated" });
+    })
+    .catch((err) => {
+      next(err);
+    });
+}
+
+function updatePassword(req, res, next) {
+  userService
+    .setUserPassword(req)
+    .then(() => {
+      res.status(200).json({ message: "Password Updated" });
+    })
+    .catch((err) => {
+      next(err);
+    });
+}
 
 function login(req, res, next) {
   userService
-    .login(req.body)
+    .login(req)
     .then((results) => {
       res
         .cookie("refresh_token", results.refresh_token.token, {
@@ -79,9 +142,9 @@ function login(req, res, next) {
 
 function register(req, res, next) {
   userService
-    .create(req.body)
+    .create(req)
     .then((user) => {
-      res.status(201).json({ message: "Registration Sucessful" });
+      res.status(201).json({ message: "Registration Successful" });
     })
     .catch((err) => {
       next(err); //Error Handler
@@ -122,7 +185,7 @@ function getAccessToken(req, res, next) {
 
 function confirmUserEmail(req, res, next) {
   userService
-    .confirmUserEmail(req.body)
+    .confirmUserEmail(req)
     .then(() =>
       res.status(200).json({
         message: `Email Confirmed`,
@@ -135,7 +198,7 @@ function confirmUserEmail(req, res, next) {
 
 function getUser(req, res, next) {
   userService
-    .getOneByUsername(req.params.username)
+    .getOneByUsername(req)
     .then((user) => {
       res.status(200).json({ user: user });
     })
