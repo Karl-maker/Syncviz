@@ -17,10 +17,7 @@ const authorize = async (req, res, next) => {
 
   try {
     //Get Key
-    const ACCESS_TOKEN_PUBLIC_KEY = fs.readFileSync(
-      path.resolve(__dirname, `../../${config.jwt.ACCESS_TOKEN_PUBLIC_KEY}`),
-      "utf8"
-    );
+    const ACCESS_TOKEN_PUBLIC_KEY = config.jwt.ACCESS_TOKEN_PUBLIC_KEY;
 
     const payload = jwt.verify(access_token, ACCESS_TOKEN_PUBLIC_KEY, {
       issuer: config.jwt.ISSUER,

@@ -1,6 +1,16 @@
 import dotenv from "dotenv";
-import fs from "fs";
+import fs, { readFile } from "fs";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+//------Utilities------------
+
+const readENVFile = (location) => {
+  return fs.readFileSync(path.resolve(__dirname, location), "utf8");
+};
 
 export default {
   //Server API:
@@ -48,13 +58,21 @@ export default {
     IS_HTTPS: process.env.DEV_IS_HTTPS || false, //This is usually false
     REFRESH_TOKEN_LIFE: process.env.DEV_REFRESH_TOKEN_LIFE || 90,
     ACCESS_TOKEN_LIFE: process.env.DEV_ACCESS_TOKEN_LIFE || 2,
-    ACCESS_TOKEN_PUBLIC_KEY:
-      process.env.DEV_ACCESS_TOKEN_PUBLIC_KEY || "/keys/access-public.key",
-    ACCESS_TOKEN_PRIVATE_KEY:
-      process.env.DEV_ACCESS_TOKEN_PRIVATE_KEY || "/keys/access-private.key",
-    REFRESH_TOKEN_PUBLIC_KEY:
-      process.env.DEV_REFRESH_TOKEN_PUBLIC_KEY || "/keys/refresh-public.key",
-    REFRESH_TOKEN_PRIVATE_KEY:
-      process.env.DEV_REFRESH_TOKEN_PRIVATE_KEY || "/keys/refresh-private.key",
+    ACCESS_TOKEN_PUBLIC_KEY: readENVFile(
+      process.env.DEV_ACCESS_TOKEN_PUBLIC_KEY ||
+        `../../../keys/access-public.key`
+    ),
+    ACCESS_TOKEN_PRIVATE_KEY: readENVFile(
+      process.env.DEV_ACCESS_TOKEN_PRIVATE_KEY ||
+        "../../../keys/access-private.key"
+    ),
+    REFRESH_TOKEN_PUBLIC_KEY: readENVFile(
+      process.env.DEV_REFRESH_TOKEN_PUBLIC_KEY ||
+        "../../../keys/refresh-public.key"
+    ),
+    REFRESH_TOKEN_PRIVATE_KEY: readENVFile(
+      process.env.DEV_REFRESH_TOKEN_PRIVATE_KEY ||
+        "../../../keys/refresh-private.key"
+    ),
   },
 };

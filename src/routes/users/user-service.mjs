@@ -61,18 +61,8 @@ async function login(input) {
       id: user._id,
     };
 
-    const ACCESS_TOKEN_PRIVATE_KEY = fs.readFileSync(
-      path.resolve(__dirname, `../../..${config.jwt.ACCESS_TOKEN_PRIVATE_KEY}`),
-      "utf8"
-    );
-
-    const REFRESH_TOKEN_PRIVATE_KEY = fs.readFileSync(
-      path.resolve(
-        __dirname,
-        `../../..${config.jwt.REFRESH_TOKEN_PRIVATE_KEY}`
-      ),
-      "utf8"
-    );
+    const ACCESS_TOKEN_PRIVATE_KEY = config.jwt.ACCESS_TOKEN_PRIVATE_KEY;
+    const REFRESH_TOKEN_PRIVATE_KEY = config.jwt.REFRESH_TOKEN_PRIVATE_KEY;
 
     const access_token = jwt.sign(payload, ACCESS_TOKEN_PRIVATE_KEY, {
       issuer: config.jwt.ISSUER,
@@ -217,21 +207,8 @@ async function getAccessToken(req) {
 
   try {
     //Get Key
-    const REFRESH_TOKEN_PUBLIC_KEY = fs.readFileSync(
-      path.resolve(
-        __dirname,
-        `../../../${config.jwt.REFRESH_TOKEN_PUBLIC_KEY}`
-      ),
-      "utf8"
-    );
-
-    const ACCESS_TOKEN_PRIVATE_KEY = fs.readFileSync(
-      path.resolve(
-        __dirname,
-        `../../../${config.jwt.ACCESS_TOKEN_PRIVATE_KEY}`
-      ),
-      "utf8"
-    );
+    const REFRESH_TOKEN_PUBLIC_KEY = config.jwt.REFRESH_TOKEN_PUBLIC_KEY;
+    const ACCESS_TOKEN_PRIVATE_KEY = config.jwt.ACCESS_TOKEN_PRIVATE_KEY;
 
     const payload = jwt.verify(
       req.cookies["refresh_token"],

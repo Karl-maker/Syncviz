@@ -45,8 +45,8 @@ router.post(
   confirmUserEmail
 );
 //---------PROTECTED-------------------
-router.delete("/user", authorize, deleteUser);
 router.get("/user", authorize, getCurrent);
+router.delete("/user", authorize, deleteUser);
 router.get("/users", authorize, getUsers);
 router.get("/user/:username", authorize, getUser);
 //---------FUNCTIONS-----------------
