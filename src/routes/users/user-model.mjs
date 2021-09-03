@@ -87,6 +87,8 @@ const UserSchema = new mongoose.Schema({
     select: false,
   },
   is_confirmed: { type: Boolean, default: 0 },
+  confirmation_pin: { type: String },
+  confirmation_expiration: { type: Date },
   registered_date: { type: Date, default: Date.now() },
 });
 

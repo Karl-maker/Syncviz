@@ -36,11 +36,19 @@ router.post(
   }),
   login
 );
-//---------UNPROTECTED-------------------
+router.post(
+  "/user/confirm-email",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+  }),
+  confirmUserEmail
+);
+//---------PROTECTED-------------------
 router.delete("/user", authorize, deleteUser);
+router.get("/user", authorize, getCurrent);
 router.get("/users", authorize, getUsers);
 router.get("/user/:username", authorize, getUser);
-
 //---------FUNCTIONS-----------------
 
 function login(req, res, next) {
@@ -91,6 +99,10 @@ function deleteUser(req, res, next) {
     });
 }
 
+function getCurrent(req, res, next) {
+  res.status(200).json({ user: req.user });
+}
+
 function getAccessToken(req, res, next) {
   userService
     .getAccessToken(req)
@@ -103,6 +115,19 @@ function getAccessToken(req, res, next) {
         message: "Token Received",
       });
     })
+    .catch((err) => {
+      next(err);
+    });
+}
+
+function confirmUserEmail(req, res, next) {
+  userService
+    .confirmUserEmail(req.body)
+    .then(() =>
+      res.status(200).json({
+        message: `Email Confirmed`,
+      })
+    )
     .catch((err) => {
       next(err);
     });

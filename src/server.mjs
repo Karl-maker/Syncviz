@@ -78,7 +78,8 @@ if (config.environment.NODE_ENV === "production") {
   );
 
   app.get("*", (req, res) => {
-    res.sendFile(INDEX_PATH);
+    //res.sendFile(INDEX_PATH);
+    res.json({ message: "React App" });
   });
 }
 

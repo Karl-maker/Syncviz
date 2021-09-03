@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
+import transporter from "../../helpers/email.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -19,6 +20,8 @@ export default {
   getByUsername,
   getOneByUsername,
   getAccessToken,
+  getConfirmationEmail,
+  confirmUserEmail,
   login,
 };
 
@@ -35,7 +38,7 @@ async function login(input) {
 
   const user = await db.user.findOne(
     { username: username },
-    { password: 1, is_confirmed: 1 }
+    { password: 1, is_confirmed: 1, email: 1, username: 1, first_name: 1 }
   );
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -43,7 +46,12 @@ async function login(input) {
   }
 
   if (!user.is_confirmed) {
-    throw { name: "NotConfirmed", message: "Email Not Confirmed" };
+    try {
+      await getConfirmationEmail(user);
+    } catch (err) {
+      throw { name: "UnexpectedError", message: err.message };
+    }
+    throw { name: "NotConfirmed", message: "Check Email To Confirm User" };
   }
 
   // If they got this far their password is correct... return jwt access_token & save refresh_token
@@ -110,6 +118,32 @@ async function login(input) {
   }
 }
 
+async function confirmUserEmail(data) {
+  const PIN = data.code;
+  const username = data.username;
+
+  const user = db.user.findOne({ username: username });
+
+  if (new Date(user.confirmation_expiration).valueOf() > new Date().valueOf()) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
+
+  try {
+    await db.user.findOneAndUpdate(
+      { username: username, confirmation_pin: PIN },
+      {
+        is_confirmed: true,
+        confirmation_pin: null,
+        confirmation_expiration: null,
+      }
+    );
+  } catch (err) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
+
+  return;
+}
+
 async function create(credentials) {
   // Get user input
   const {
@@ -167,6 +201,12 @@ async function create(credentials) {
   });
 
   //--------------------------------Send Email To Confirm User-----------------------------------
+
+  try {
+    await getConfirmationEmail(new_user);
+  } catch (err) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
 
   return;
   // Our register logic ends here
@@ -250,6 +290,48 @@ async function getAccessToken(req) {
   //Check In Database
 }
 
+async function getConfirmationEmail(user) {
+  /*
+  1. Get username
+  2. Find user 
+  3. Get Email
+  4. Generate PIN
+  - Store PIN against user in DB
+  5. Send Email
+  6. Return Email in a STRING
+  */
+
+  const PIN = await Math.floor(100000 + Math.random() * 900000); //Generate PIN
+
+  try {
+    await db.user.findOneAndUpdate(
+      { username: user.username },
+      {
+        confirmation_pin: PIN,
+        confirmation_expiration: new Date(Date.now() + 1 * 60 * 1000),
+      }
+    );
+  } catch (err) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
+
+  try {
+    await sendEmail({
+      subject: "Confirm Email",
+      message: `Hi ${
+        user.first_name || user.username
+      }, your confirmation code is ${PIN}`,
+      email: user.email,
+    });
+  } catch (err) {
+    throw { name: "UnexpectedError", message: err.message };
+  }
+
+  return `Hi ${
+    user.first_name || user.username
+  }, your confirmation code has been sent to your Email`;
+}
+
 async function getByUsername(parameters) {
   try {
     //parameters = req
@@ -330,4 +412,15 @@ async function _delete(req) {
   await db.user.findOneAndDelete({ username: req.user.username });
 
   return;
+}
+
+//------Utilites----------
+
+async function sendEmail({ subject, message, email }) {
+  transporter.sendMail({
+    from: config.email.SENDER_MAIL_ADDRESS,
+    to: email,
+    subject: subject,
+    html: message,
+  });
 }
