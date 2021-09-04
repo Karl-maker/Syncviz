@@ -7,6 +7,8 @@ export default {
   create,
   _delete,
   getSceneById,
+  getScenes,
+  getMyScenes,
 };
 
 async function create(req) {
@@ -40,7 +42,7 @@ async function _delete(req) {
 
   try {
     await db.scene.findOneAndDelete({
-      _id: req.body._id,
+      _id: req.body.id,
       owner: user.username,
     });
   } catch (err) {
@@ -60,12 +62,73 @@ async function getSceneById(req) {
   return scene;
 }
 
+async function getScenes(req) {
+  const page_size = parseInt(req.query.page_size, 10);
+  const page_number = req.query.page_number;
+  const q = req.query.q; //title
+  const c = req.query.c; //category
+  const order = req.query.order;
+
+  //------Pagenation Helpers-------------
+
+  const page = Math.max(0, page_number);
+
+  //------Order Helpers------------------
+
+  var query = {
+    is_private: false,
+  };
+
+  if (q) {
+    query.title = { $regex: `${q}`, $options: `i` };
+  }
+  if (c) {
+    query.category = { $regex: `${c}`, $options: `i` };
+  }
+
+  const scenes = await db.user
+    .findAll(query)
+    .limit(page_size)
+    .skip(page_size * page)
+    .sort(order); // get all
+
+  return scenes;
+}
+
 async function getMyScenes(req) {
   const page_size = parseInt(req.query.page_size, 10);
   const page_number = req.query.page_number;
   const q = req.query.q; //title
   const c = req.query.c; //category
   const order = req.query.order;
+  const user = req.user;
+
+  //------Pagenation Helpers-------------
+
+  const page = Math.max(0, page_number);
+
+  //------Order Helpers------------------
+
+  var query = {
+    owner: user._id,
+  };
+
+  //----------Add Filters----------
+
+  if (q) {
+    query.title = { $regex: `${q}`, $options: `i` };
+  }
+  if (c) {
+    query.category = { $regex: `${c}`, $options: `i` };
+  }
+
+  const scenes = await db.user
+    .findAll(query)
+    .limit(page_size)
+    .skip(page_size * page)
+    .sort(order); // get all
+
+  return scenes;
 }
 
 //---------Utilites-----------

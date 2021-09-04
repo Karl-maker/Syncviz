@@ -40,22 +40,25 @@ async function login(req) {
   }
 
   var user;
+  var query = {};
 
-  //Email OR Username
+  //Email OR Username OR OTHER
 
-  if (!username) {
-    //Email Login
-    user = await db.user.findOne(
-      { email: email },
-      { password: 1, is_confirmed: 1, email: 1, username: 1, first_name: 1 }
-    );
-  } else {
-    //Username Login
-    user = await db.user.findOne(
-      { username: username },
-      { password: 1, is_confirmed: 1, email: 1, username: 1, first_name: 1 }
-    );
+  if (username) {
+    query.username = username;
   }
+
+  if (email) {
+    query.email = email;
+  }
+
+  user = await db.user.findOne(query, {
+    password: 1,
+    is_confirmed: 1,
+    email: 1,
+    username: 1,
+    first_name: 1,
+  });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw { name: "UnauthorizedError", message: "User is unauthorized" };
@@ -130,37 +133,32 @@ async function confirmUserEmail(req) {
   const email = req.body.email;
 
   var user;
+  var select = {};
 
-  if (!username) {
-    user = await db.user.findOne({ email: email });
-  } else {
-    user = await db.user.findOne({ username: username });
+  //Email OR Username OR OTHER
+
+  if (username) {
+    select.username = username;
   }
+
+  if (email) {
+    select.email = email;
+  }
+
+  user = await db.user.findOne(select);
 
   if (new Date(user.token_expiration).valueOf() > new Date().valueOf()) {
     throw { name: "UnexpectedError", message: err.message };
   }
 
+  select.token_code = PIN;
+
   try {
-    if (!username) {
-      user = await db.user.findOneAndUpdate(
-        { email: email, token_code: PIN },
-        {
-          is_confirmed: true,
-          token_code: null,
-          token_expiration: null,
-        }
-      );
-    } else {
-      user = await db.user.findOneAndUpdate(
-        { username: username, token_code: PIN },
-        {
-          is_confirmed: true,
-          token_code: null,
-          token_expiration: null,
-        }
-      );
-    }
+    user = await db.user.findOneAndUpdate(select, {
+      is_confirmed: true,
+      token_code: null,
+      token_expiration: null,
+    });
   } catch (err) {
     throw { name: "UnexpectedError", message: err.message };
   }
@@ -172,6 +170,8 @@ async function resetPassword(req) {
   const PIN = req.body.code;
   const username = req.body.username;
   const email = req.body.email;
+
+  var select = {};
 
   if (!username && !email) {
     throw { name: "UnauthorizedError", message: "Fill In Fields" };
@@ -188,18 +188,20 @@ async function resetPassword(req) {
   }
   var user;
 
-  if (!username) {
-    user = await db.user.findOne(
-      { email: email },
-      { password: 1, email: 1, token_expiration: 1, username: 1 }
-    );
-  } else {
-    user = await db.user.findOne(
-      { username: username },
-      { password: 1, email: 1, token_expiration: 1, username: 1 }
-    );
+  if (username) {
+    select.username = username;
   }
 
+  if (email) {
+    select.email = email;
+  }
+
+  user = await db.user.findOne(select, {
+    password: 1,
+    email: 1,
+    token_expiration: 1,
+    username: 1,
+  });
   if (new Date(user.token_expiration).valueOf() > new Date().valueOf()) {
     throw { name: "UnexpectedError", message: err.message };
   }
@@ -352,51 +354,51 @@ async function getAccessToken(req) {
 }
 
 async function getByUsername(req) {
+  //parameters = req
+  const page_size = parseInt(req.query.page_size, 10);
+  const page_number = req.query.page_number;
+  const q = req.query.q;
+  const order = req.query.order;
+
+  var users = [{}];
+
+  //------Pagenation Helpers-------------
+
+  const page = Math.max(0, page_number);
+
+  //------Order Helpers------------------
+
+  var get_order;
+
+  //default
+  if (!order) {
+    get_order = {
+      username: "asc",
+    };
+  } else {
+    get_order = {
+      username: order,
+    };
+  }
+
+  var query = {
+    is_confirmed: true,
+  };
+
+  if (q) {
+    query.username = { $regex: `${q}`, $options: `i` };
+  } else {
+    throw { name: "NotFound", message: "No Users" };
+  }
+
+  //----------Add Filters----------
+
   try {
-    //parameters = req
-    const page_size = parseInt(req.query.page_size, 10);
-    const page_number = req.query.page_number;
-    const q = req.query.q;
-    const order = req.query.order;
-
-    var users = [{}];
-
-    //------Pagenation Helpers-------------
-
-    const page = Math.max(0, page_number);
-
-    //------Order Helpers------------------
-
-    var get_order;
-
-    //default
-    if (!order) {
-      get_order = {
-        username: "asc",
-      };
-    } else {
-      get_order = {
-        username: order,
-      };
-    }
-
-    if (!q) {
-      // users = await db.user
-      //   .find({ is_confirmed: true })
-      //   .skip(page_size * page)
-      //   .limit(page_size)
-      //   .sort(get_order); // get all;
-      return {};
-    } else {
-      users = await db.user
-        .find({
-          username: { $regex: `${q}`, $options: "i" },
-          is_confirmed: true,
-        })
-        .limit(page_size)
-        .skip(page_size * page)
-        .sort(get_order); // get all
-    }
+    users = await db.user
+      .find(query)
+      .limit(page_size)
+      .skip(page_size * page)
+      .sort(get_order); // get all
   } catch (e) {
     throw { name: "UnexpectedError", message: e.message };
   }
