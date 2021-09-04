@@ -6,17 +6,19 @@ import rateLimit from "express-rate-limit";
 const router = express.Router();
 
 //............ROUTES............................................
-//cookie: refresh_token, body: {username, origin}
+
 router.get(
+  //cookie: refresh_token, body: {username, origin}
   "/user/authorize",
   rateLimit({
     windowMs: config.jwt.ACCESS_TOKEN_LIFE * 60 * 1000,
-    max: 5, //No Constant Refreshes
+    max: 5,
   }),
   getAccessToken
 );
-//body: {first_name, last_name, email, username, password, confirmed_password}
+
 router.post(
+  //body: {first_name, last_name, email, username, password, confirmed_password}
   "/user/register",
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -24,8 +26,9 @@ router.post(
   }),
   register
 );
-//body: {password, origin, username || email}
+
 router.post(
+  //body: {password, origin, username || email}
   "/user/authenticate",
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -33,8 +36,9 @@ router.post(
   }),
   login
 );
-//body: {code, username || email}
+
 router.post(
+  //body: {code, username || email}
   "/user/confirm-email",
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -42,8 +46,9 @@ router.post(
   }),
   confirmUserEmail
 );
-//body: {username || email}
+
 router.get(
+  //body: {username || email}
   "/user/reset-password",
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -51,8 +56,9 @@ router.get(
   }),
   resetPasswordEmail
 );
-//body: {code, username || email, new_password, confirm_password}
+
 router.post(
+  //body: {code, username || email, new_password, confirm_password}
   "/user/reset-password",
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -69,8 +75,9 @@ router.get("/user", authorize, getCurrent);
 router.delete("/user", authorize, deleteUser);
 //params: username
 router.get("/user/:username", authorize, getUser);
-//body: {current_password, new_password, confirm_password}
+
 router.patch(
+  //body: {current_password, new_password, confirm_password}
   "/user/password",
   rateLimit({
     windowMs: 15 * 60 * 1000,

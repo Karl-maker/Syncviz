@@ -56,6 +56,11 @@ function errorHandler(err, req, res, next) {
             field: err.message,
           },
         });
+      case err.name === "NotAllowed":
+        //400 Errors
+        return res.status(401).json({
+          message: err.message,
+        });
       case err.message.includes("validation failed"):
         //400 Errors
         return res.status(400).json({

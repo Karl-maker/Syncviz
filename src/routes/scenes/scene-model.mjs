@@ -37,6 +37,9 @@ const SceneSchema = new mongoose.Schema({
       `Description must be less than ${MAX_DESCRIPTION} characters`,
     ],
   },
+  thumbnail_link: {
+    type: String,
+  },
   category: {
     type: String,
     trim: true,
@@ -47,13 +50,13 @@ const SceneSchema = new mongoose.Schema({
   },
   owner: {
     type: String,
-    required: [true, "Scene requires a owner"],
+    required: [true, "Scene requires a owner"], //id
   },
   is_private: {
     type: Boolean,
     default: 0,
   },
-  password: {
+  passcode: {
     type: String,
     minLength: [
       MIN_PASSWORD,
@@ -68,9 +71,6 @@ const SceneSchema = new mongoose.Schema({
     object_link: {
       type: String,
     },
-    thumbnail_link: {
-      type: String,
-    },
     default_skybox_link: {
       type: String,
     },
@@ -81,6 +81,7 @@ const SceneSchema = new mongoose.Schema({
   },
   updated_date: {
     type: Date,
+    default: null,
   },
 });
 

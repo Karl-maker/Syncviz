@@ -4,7 +4,8 @@
   "description": "A RESTful API service for a new social media platform",
   "main": "./src/server.mjs",
   "scripts": {
-    "dev": "nodemon --experimental-modules ./src/server.mjs"
+    "dev": "nodemon --experimental-modules ./src/server.mjs",
+    "dev_node": "node --experimental-modules ./src/server.mjs"
   },
   "keywords": [
     "API",
