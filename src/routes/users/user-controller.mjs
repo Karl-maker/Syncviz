@@ -1,7 +1,7 @@
 import express from "express";
 import userService from "./user-service.mjs";
 import config from "../../config/config.mjs";
-import authorize from "../../middleware/authorization.mjs";
+import { authorize } from "../../middleware/authorization.mjs";
 import rateLimit from "express-rate-limit";
 const router = express.Router();
 
@@ -75,7 +75,6 @@ router.get("/user", authorize, getCurrent);
 router.delete("/user", authorize, deleteUser);
 //params: username
 router.get("/user/:username", authorize, getUser);
-
 router.patch(
   //body: {current_password, new_password, confirm_password}
   "/user/password",
@@ -86,6 +85,7 @@ router.patch(
   authorize,
   updatePassword
 );
+
 //---------FUNCTIONS-----------------
 
 function resetPasswordEmail(req, res, next) {
@@ -224,5 +224,7 @@ function getUsers(req, res, next) {
       next(err);
     });
 }
+
+//https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/getting-started-nodejs.html
 
 export default router;

@@ -6,9 +6,9 @@ import bcrypt from "bcrypt";
 export default {
   create,
   _delete,
-  getSceneById,
-  getScenes,
-  getMyScenes,
+  getById,
+  getAll,
+  getMine,
 };
 
 async function create(req) {
@@ -29,8 +29,9 @@ async function create(req) {
     is_private: req.body.is_private,
     passcode: await bcrypt.hash(req.body.passcode, 10),
     content: {
-      object_link: resource.object_link,
-      default_skybox_link: resource.default_skybox_link,
+      object_size: resource.object_size || null,
+      object_link: resource.object_link || req.body.object_link, //User can use their own link
+      default_skybox_link: resource.default_skybox_link || null,
     },
   });
 
@@ -52,17 +53,25 @@ async function _delete(req) {
   return;
 }
 
-async function getSceneById(req) {
+async function getById(req) {
   const user = req.user;
 
-  await isAllowedView(user);
+  if (!(await isAllowedView(user.id, req.params.id))) {
+    //Check for password
+
+    if (!req.body.password) {
+      //throw that shit
+    } else {
+      //compare
+    }
+  }
 
   const scene = await db.scene.findOne({ _id: req.params.id });
 
   return scene;
 }
 
-async function getScenes(req) {
+async function getAll(req) {
   const page_size = parseInt(req.query.page_size, 10);
   const page_number = req.query.page_number;
   const q = req.query.q; //title
@@ -95,7 +104,7 @@ async function getScenes(req) {
   return scenes;
 }
 
-async function getMyScenes(req) {
+async function getMine(req) {
   const page_size = parseInt(req.query.page_size, 10);
   const page_number = req.query.page_number;
   const q = req.query.q; //title
@@ -131,6 +140,42 @@ async function getMyScenes(req) {
   return scenes;
 }
 
+async function request(req) {
+  const user = req.user;
+  const id = req.params.id;
+  var result;
+
+  const scene = await db.scene.findOne({ _id: req.params.id });
+
+  var result;
+
+  if (!scene) {
+    throw { name: "NotFound", message: "Scene Not Found" };
+  }
+
+  if (scene.is_private) {
+    //if private AND their is no user data ask them to loggin
+
+    if (!user) {
+      //Tell them to loggin
+      result = "Loggin";
+    } else {
+      //check if user has access
+      if (await isAllowedView(user.id, id)) {
+        result = "Authorized";
+        return result;
+      } else {
+        result = "Unauthorized";
+      }
+    }
+  }
+  if (scene.passcode) {
+    result = "Passcode";
+  }
+
+  return result;
+}
+
 //---------Utilites-----------
 
 async function isAllowedCreate(user) {
@@ -139,4 +184,6 @@ async function isAllowedCreate(user) {
   // Server || Backends checking expiration dates
 }
 
-async function isAllowedView(user) {}
+async function isAllowedView(user_id, scene_id) {
+  return false;
+}

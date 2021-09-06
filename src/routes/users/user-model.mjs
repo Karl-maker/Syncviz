@@ -87,6 +87,7 @@ const UserSchema = new mongoose.Schema({
     select: false,
   },
   is_confirmed: { type: Boolean, default: 0 },
+  use_email_notification: { type: Boolean, default: 1 },
   token_code: { type: String },
   token_expiration: { type: Date },
   registered_date: { type: Date, default: Date.now() },

@@ -7,7 +7,9 @@ const NotificationSchema = new mongoose.Schema({
     message: { type: String },
     route: { type: String },
   },
+  owner: { type: String },
   is_seen: { type: Boolean, default: 0 },
+  is_notified: { type: Boolean, default: 0 },
   created_date: { type: Date, default: Date.now() },
 });
 

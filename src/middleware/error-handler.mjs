@@ -10,6 +10,7 @@ function errorHandler(err, req, res, next) {
         //No jwt token
         logger.debug({
           message: err.message,
+          stacktrace: err.stacktrace,
           timestamp: new Date().toString(),
         });
         return res.status(403).json({ message: "Unauthorized" });
@@ -17,6 +18,7 @@ function errorHandler(err, req, res, next) {
         // jwt authentication error
         logger.debug({
           message: err.message,
+          stacktrace: err.stacktrace,
           timestamp: new Date().toString(),
         });
         return res.status(401).json({ message: "Unauthorized" });
@@ -24,6 +26,7 @@ function errorHandler(err, req, res, next) {
         //404 Errors
         logger.debug({
           message: err.message,
+          stacktrace: err.stacktrace,
           timestamp: new Date().toString(),
         });
         return res.status(404).json({ message: err.message });
@@ -31,6 +34,7 @@ function errorHandler(err, req, res, next) {
         //401 Errors
         logger.debug({
           message: err.message,
+          stacktrace: err.stacktrace,
           timestamp: new Date().toString(),
         });
         return res.status(401).json({ message: err.message });
@@ -38,6 +42,7 @@ function errorHandler(err, req, res, next) {
         //400 Errors
         logger.debug({
           message: err.message,
+          stacktrace: err.stacktrace,
           timestamp: new Date().toString(),
         });
         return res.status(400).json({ message: err.message });
@@ -45,9 +50,12 @@ function errorHandler(err, req, res, next) {
         //402 Errors
         logger.debug({
           message: err.message,
+          stacktrace: err.stacktrace,
           timestamp: new Date().toString(),
         });
-        return res.status(402).json({ message: err.message });
+        return res
+          .status(402)
+          .json({ stacktrace: err.stacktrace, message: err.message });
       case err.name === "ValidationError":
         //400 Errors
         return res.status(400).json({
@@ -72,6 +80,7 @@ function errorHandler(err, req, res, next) {
       default:
         logger.error({
           message: err.message,
+          stacktrace: err.stacktrace,
           timestamp: new Date().toString(),
         });
         return res.status(500).json({ message: "Unexpected Error" });
@@ -79,6 +88,7 @@ function errorHandler(err, req, res, next) {
   } catch (e) {
     logger.error({
       message: e,
+      stacktrace: err.stacktrace,
       timestamp: new Date().toString(),
     });
     return res.status(500).json({ message: "Unexpected Error" });

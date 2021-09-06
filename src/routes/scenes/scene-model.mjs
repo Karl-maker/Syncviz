@@ -54,7 +54,7 @@ const SceneSchema = new mongoose.Schema({
   },
   is_private: {
     type: Boolean,
-    default: 0,
+    default: 1,
   },
   passcode: {
     type: String,
@@ -68,6 +68,9 @@ const SceneSchema = new mongoose.Schema({
     ],
   },
   content: {
+    object_size: {
+      type: String,
+    },
     object_link: {
       type: String,
     },
