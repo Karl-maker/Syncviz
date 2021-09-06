@@ -85,7 +85,12 @@ async function getAll(req) {
   const page_number = req.query.page_number;
   const q = req.query.q; //title
   const c = req.query.c; //category
+  const s = req.query.s; //is_shared?
   const order = req.query.order;
+
+  //-------------------------------------
+
+  const user = req.user;
 
   //------Pagenation Helpers-------------
 
@@ -102,6 +107,11 @@ async function getAll(req) {
   }
   if (c) {
     query.category = { $regex: `${c}`, $options: `i` };
+  }
+
+  if (s) {
+    const shares = await db.share.findAll({ to: user.username }, { _id: 1 });
+    query._id = { $in: shares._id };
   }
 
   const scenes = await db.user

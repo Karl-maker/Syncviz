@@ -2,7 +2,59 @@ import { db } from "../../helpers/db.mjs";
 import config from "../../config/config.mjs";
 import logger from "../../log/server-logger.mjs";
 
-export default {};
+export default {
+  getAllShares,
+  setPremissionLevel,
+  create,
+  _delete,
+};
+
+async function setPremissionLevel(req) {
+  const user = req.user;
+
+  const shared = await db.share.findOneAndUpdate(
+    { scene_id: req.body.scene_id, to: req.body.to, owner: user },
+    { permission_level: req.body.permission_level }
+  );
+
+  return shared;
+}
+
+async function getAllShares(req) {
+  const page_size = parseInt(req.query.page_size, 10);
+  const page_number = req.query.page_number;
+  const q = req.query.q; //title
+  const v = req.query.v; //scene_id
+  const c = req.query.c; //category
+  const order = req.query.order;
+  const user = req.user;
+
+  //------Pagenation Helpers-------------
+
+  const page = Math.max(0, page_number);
+
+  //------Order Helpers------------------
+
+  var query = {
+    scene_id: v,
+    owner: user.id,
+  };
+
+  if (q) {
+    query.title = { $regex: `${q}`, $options: `i` };
+  }
+  if (c) {
+    query.category = { $regex: `${c}`, $options: `i` };
+  }
+
+  const shares = await db.share
+    .findAll(query)
+    .limit(page_size)
+    .skip(page_size * page)
+    .sort(order); // get all
+
+  return shares;
+}
 
 async function create(req) {
   const user = req.user;

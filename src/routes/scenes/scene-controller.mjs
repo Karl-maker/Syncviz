@@ -17,8 +17,8 @@ router.get("/scene/request/:id", authorizePassively, requestScene);
 router.post("/scene", authorize, createScene);
 //body: id - Scene
 router.delete("/scene", authorize, deleteScene);
-//query: q, c, order, page_size, page_number
-router.get("/scene", authorize, getCurrentUserScenes);
+//query: q, c, order, page_size, page_number, s
+router.get("/scenes", authorize, getCurrentUserScenes);
 //--------FUNCTION--------------------
 
 function getScene(req, res, next) {
