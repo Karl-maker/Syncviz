@@ -42,7 +42,7 @@ const limiter = rateLimit({
 connectDB();
 
 //Middleware
-// GZIP all assets
+//GZIP all assets
 app.use((req, res, next) => {
   //depending on content type switch contentType
   compressRouter({ config: config, contentType: "DEFAULT" });

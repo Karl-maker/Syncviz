@@ -25,6 +25,7 @@ export default {
     PROTOCOL: process.env.DEV_PROTOCOL || "http",
     HOST: process.env.DEV_CLIENT_HOST || "192.168.0.13",
     PORT: process.env.DEV_CLIENT_PORT || 3000,
+    CLIENT_LINK: process.env.DEV_CLIENT_LINK || "Syncviz.com",
   },
 
   optimization: {

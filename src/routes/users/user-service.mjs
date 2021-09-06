@@ -20,6 +20,7 @@ export default {
   getByUsername,
   getOneByUsername,
   getAccessToken,
+  deleteRefreshToken,
   getResetPasswordLink,
   confirmUserEmail,
   setUserPassword,
@@ -124,6 +125,40 @@ async function login(req) {
     };
   } catch (err) {
     throw { name: "UnexpectedError", message: err.message };
+  }
+}
+
+async function deleteRefreshToken(req) {
+  const user = req.user;
+
+  try {
+    //Get Key
+    const REFRESH_TOKEN_PUBLIC_KEY = config.jwt.REFRESH_TOKEN_PUBLIC_KEY;
+
+    const payload = jwt.verify(
+      req.cookies["refresh_token"],
+      REFRESH_TOKEN_PUBLIC_KEY,
+      {
+        issuer: config.jwt.ISSUER,
+        subject: req.body.username, //Stored In Local Storage
+        audience: req.body.origin, //Stored In Local Storage
+        expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
+        algorithm: [config.jwt.ALGORITHM],
+      }
+    );
+
+    if (!payload) {
+      throw { name: "UnauthorizedError" };
+    }
+
+    await db.login.findOneAndDelete({
+      user_id: payload.id,
+      refresh_token: req.cookies["refresh_token"],
+    });
+
+    return;
+  } catch (err) {
+    throw { name: "UnexpectedError" };
   }
 }
 

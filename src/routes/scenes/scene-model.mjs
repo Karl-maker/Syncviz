@@ -66,6 +66,7 @@ const SceneSchema = new mongoose.Schema({
       MAX_PASSWORD,
       `Password must be less than ${MAX_PASSWORD} characters`,
     ],
+    default: null,
   },
   content: {
     object_size: {

@@ -7,7 +7,7 @@ const router = express.Router();
 
 //............ROUTES............................................
 
-router.get(
+router.post(
   //cookie: refresh_token, body: {username, origin}
   "/user/authorize",
   rateLimit({
@@ -85,8 +85,31 @@ router.patch(
   authorize,
   updatePassword
 );
+router.delete(
+  //cookie: refresh_token, body: {username, origin}
+  "/user/authorize",
+  rateLimit({
+    windowMs: config.jwt.ACCESS_TOKEN_LIFE * 60 * 1000,
+    max: 5,
+  }),
+  authorize,
+  deleteRefreshToken
+);
 
 //---------FUNCTIONS-----------------
+
+function deleteRefreshToken(req, res, next) {
+  userService
+    .deleteRefreshToken(req)
+    .then((results) => {
+      res.status(200).json({
+        message: "User logged out",
+      });
+    })
+    .catch((err) => {
+      next(err);
+    });
+}
 
 function resetPasswordEmail(req, res, next) {
   userService

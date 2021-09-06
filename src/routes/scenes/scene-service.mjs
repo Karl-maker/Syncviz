@@ -55,18 +55,27 @@ async function _delete(req) {
 
 async function getById(req) {
   const user = req.user;
+  const id = req.params.id;
+
+  var scene;
 
   if (!(await isAllowedView(user.id, req.params.id))) {
     //Check for password
 
     if (!req.body.password) {
       //throw that shit
+      throw { name: "Unauthorized", message: "Unauthorized" };
     } else {
       //compare
+      scene = await db.scene.findOne({ _id: id });
+
+      if (!(await bcrypt.compare(req.body.password, compare_data.passcode))) {
+        throw { name: "Unauthorized", message: "Unauthorized" };
+      }
     }
   }
 
-  const scene = await db.scene.findOne({ _id: req.params.id });
+  scene.passcode = null;
 
   return scene;
 }
