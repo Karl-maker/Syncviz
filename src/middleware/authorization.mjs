@@ -27,7 +27,10 @@ export const authorize = async (req, res, next) => {
       algorithm: [config.jwt.ALGORITHM],
     });
 
-    req.user = await db.user.findOne({ _id: payload.id });
+    req.user = await db.user.findOne(
+      { _id: payload.id },
+      { token_expiration: 0, token_code: 0 }
+    );
     next();
   } catch (err) {
     next({ name: "UnauthorizedError" });

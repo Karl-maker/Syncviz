@@ -101,7 +101,7 @@ router.delete(
 function deleteRefreshToken(req, res, next) {
   userService
     .deleteRefreshToken(req)
-    .then((results) => {
+    .then(() => {
       res.status(200).json({
         message: "User logged out",
       });

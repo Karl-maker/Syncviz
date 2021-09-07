@@ -31,13 +31,17 @@ export default {
 //.....Service Functions: ONLY req
 
 async function login(req) {
-  const username = req.body.username;
-  const password = req.body.password;
-  const origin = req.body.origin;
-  const email = req.body.email;
+  const username = req.body.username || null;
+  const password = req.body.password || null;
+  const origin = req.body.origin || null;
+  const email = req.body.email || null;
 
   if ((!username && !email) || !password) {
     throw { name: "UnauthorizedError", message: "Fill In Fields" };
+  }
+
+  if (!origin) {
+    throw { name: "UnauthorizedError", message: "Unexpected Error" };
   }
 
   var user;
@@ -131,53 +135,55 @@ async function login(req) {
 async function deleteRefreshToken(req) {
   const user = req.user;
 
-  try {
-    //Get Key
-    const REFRESH_TOKEN_PUBLIC_KEY = config.jwt.REFRESH_TOKEN_PUBLIC_KEY;
+  //Get Key
+  const REFRESH_TOKEN_PUBLIC_KEY = config.jwt.REFRESH_TOKEN_PUBLIC_KEY;
 
-    const payload = jwt.verify(
-      req.cookies["refresh_token"],
-      REFRESH_TOKEN_PUBLIC_KEY,
-      {
-        issuer: config.jwt.ISSUER,
-        subject: req.body.username, //Stored In Local Storage
-        audience: req.body.origin, //Stored In Local Storage
-        expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
-        algorithm: [config.jwt.ALGORITHM],
-      }
-    );
-
-    if (!payload) {
-      throw { name: "UnauthorizedError" };
+  const payload = await jwt.verify(
+    req.cookies["refresh_token"],
+    REFRESH_TOKEN_PUBLIC_KEY,
+    {
+      issuer: config.jwt.ISSUER,
+      subject: req.body.username.toLowerCase(), //Stored In Local Storage
+      audience: req.body.origin, //Stored In Local Storage
+      expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
+      algorithm: [config.jwt.ALGORITHM],
     }
+  );
 
+  if (!payload) {
+    throw { name: "UnauthorizedError" };
+  }
+
+  try {
     await db.login.findOneAndDelete({
       user_id: payload.id,
       refresh_token: req.cookies["refresh_token"],
     });
-
-    return;
   } catch (err) {
     throw { name: "UnexpectedError" };
   }
+
+  return;
 }
 
 async function confirmUserEmail(req) {
   const PIN = req.body.code;
-  const username = req.body.username;
-  const email = req.body.email;
+  const username = req.body.username || null;
+  const email = req.body.email || null;
 
   var user;
-  var select = {};
+  var select = {
+    token_code: req.body.code,
+  };
 
   //Email OR Username OR OTHER
 
   if (username) {
-    select.username = username;
+    select.username = username.toLowerCase();
   }
 
   if (email) {
-    select.email = email;
+    select.email = email.toLowerCase();
   }
 
   user = await db.user.findOne(select);
@@ -282,16 +288,16 @@ async function create(req) {
   // check if user already exist--------------
 
   // Validate if user exist in our database
-  if (await db.user.findOne({ email: email })) {
+  if (await db.user.findOne({ email: email.toLowerCase() })) {
     throw {
       name: "AlreadyExist",
       message: {
         prompt: "Already Exist",
-        field: { email: "Username already taken" },
+        field: { email: "Email already in use" },
       },
     };
   }
-  if (await db.user.findOne({ username: username })) {
+  if (await db.user.findOne({ username: username.toLowerCase() })) {
     throw {
       name: "AlreadyExist",
       message: {
@@ -430,7 +436,16 @@ async function getByUsername(req) {
 
   try {
     users = await db.user
-      .find(query)
+      .find(query, {
+        is_confirmed: 0,
+        use_email_notification: 0,
+        token_code: 0,
+        token_expiration: 0,
+        registered_date: 0,
+        membership_info: 0,
+        email: 0,
+        __v: 0,
+      })
       .limit(page_size)
       .skip(page_size * page)
       .sort(get_order); // get all
@@ -442,7 +457,19 @@ async function getByUsername(req) {
 }
 
 async function getOneByUsername(req) {
-  const user = await db.user.findOne({ username: req.params.username });
+  const user = await db.user.findOne(
+    { username: req.params.username },
+    {
+      is_confirmed: 0,
+      use_email_notification: 0,
+      token_code: 0,
+      token_expiration: 0,
+      registered_date: 0,
+      membership_info: 0,
+      email: 0,
+      __v: 0,
+    }
+  );
 
   if (!user) {
     throw { name: "NotFound", message: `${req.params.username} Not Found` };
@@ -476,27 +503,29 @@ async function setUserPassword(req) {
 }
 
 async function getResetPasswordLink(req) {
-  var username = req.body.username;
-  const email = req.body.email;
+  const username = req.body.username || null;
+  const email = req.body.email || null;
 
   if (!username && !email) {
     throw { name: "UnauthorizedError", message: "Fill In Fields" };
   }
 
-  var user;
+  var search = {};
+
+  if (email) {
+    search.email = email.toLowerCase();
+  }
+  if (username) {
+    search.username = username.toLowerCase();
+  }
 
   //Email OR Username
-  user = await db.user.findOne(
-    { username: username },
-    { is_confirmed: 1, email: 1, username: 1, first_name: 1 }
-  );
-
-  if (!user.email) {
-    user = await db.user.findOne(
-      { email: email },
-      { is_confirmed: 1, email: 1, username: 1, first_name: 1 }
-    );
-  }
+  const user = await db.user.findOne(search, {
+    is_confirmed: 1,
+    email: 1,
+    username: 1,
+    first_name: 1,
+  });
 
   if (!user.email) {
     throw { name: "UnauthorizedError" };

@@ -66,7 +66,7 @@ export default {
     ALGORITHM: process.env.DEV_ALGORITHM || "RS256",
     IS_HTTPS: process.env.DEV_IS_HTTPS || false, //This is usually false
     REFRESH_TOKEN_LIFE: process.env.DEV_REFRESH_TOKEN_LIFE || 90,
-    ACCESS_TOKEN_LIFE: process.env.DEV_ACCESS_TOKEN_LIFE || 2,
+    ACCESS_TOKEN_LIFE: process.env.DEV_ACCESS_TOKEN_LIFE || 10000,
     ACCESS_TOKEN_PUBLIC_KEY: readENVFile(
       process.env.DEV_ACCESS_TOKEN_PUBLIC_KEY ||
         `../../../keys/access-public.key`
