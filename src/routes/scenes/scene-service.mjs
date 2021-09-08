@@ -9,6 +9,7 @@ export default {
   getById,
   getAll,
   getMine,
+  request,
 };
 
 async function create(req) {
@@ -19,6 +20,12 @@ async function create(req) {
 
   await isAllowedCreate(user);
 
+  var passcode;
+
+  if (req.body.passcode) {
+    passcode = await bcrypt.hash(req.body.passcode, 10);
+  }
+
   const scene = await db.scene.create({
     title: req.body.title,
     view_type: req.body.view_type,
@@ -27,11 +34,11 @@ async function create(req) {
     category: req.body.category,
     owner: user.username,
     is_private: req.body.is_private,
-    passcode: await bcrypt.hash(req.body.passcode, 10),
+    passcode: passcode,
     content: {
-      object_size: resource.object_size || null,
+      object_size: resource.object_size,
       object_link: resource.object_link || req.body.object_link, //User can use their own link
-      default_skybox_link: resource.default_skybox_link || null,
+      default_skybox_link: resource.default_skybox_link,
     },
   });
 
@@ -127,8 +134,7 @@ async function getMine(req) {
   const page_size = parseInt(req.query.page_size, 10);
   const page_number = req.query.page_number;
   const q = req.query.q; //title
-  const c = req.query.c; //category
-  const order = req.query.order;
+  const order = req.query.order || "asc";
   const user = req.user;
 
   //------Pagenation Helpers-------------
@@ -146,12 +152,15 @@ async function getMine(req) {
   if (q) {
     query.title = { $regex: `${q}`, $options: `i` };
   }
-  if (c) {
-    query.category = { $regex: `${c}`, $options: `i` };
-  }
 
-  const scenes = await db.user
-    .findAll(query)
+  const scenes = await db.scene
+    .find({
+      $or: [
+        { title: query.title },
+        { description: query.title },
+        { category: query.title },
+      ],
+    })
     .limit(page_size)
     .skip(page_size * page)
     .sort(order); // get all
@@ -166,13 +175,11 @@ async function request(req) {
 
   const scene = await db.scene.findOne({ _id: req.params.id });
 
-  var result;
-
   if (!scene) {
     throw { name: "NotFound", message: "Scene Not Found" };
   }
 
-  if (scene.is_private) {
+  if (!scene.is_private) {
     //if private AND their is no user data ask them to loggin
 
     if (!user) {
@@ -180,9 +187,8 @@ async function request(req) {
       result = "Loggin";
     } else {
       //check if user has access
-      if (await isAllowedView(user.id, id)) {
-        result = "Authorized";
-        return result;
+      if (await isAllowedView(user.username, id)) {
+        return "Authorized";
       } else {
         result = "Unauthorized";
       }
@@ -198,11 +204,28 @@ async function request(req) {
 //---------Utilites-----------
 
 async function isAllowedCreate(user) {
+  if (
+    await db.user.findOne({
+      _id: user.id,
+      membership_info: { is_premium: true },
+    })
+  ) {
+    return true;
+  }
   throw { name: "NotAllowed", message: "Not Premium User" }; //Depending on the premium terms
 
   // Server || Backends checking expiration dates
 }
 
-async function isAllowedView(user_id, scene_id) {
-  return false;
+async function isAllowedView(username, scene_id) {
+  if (
+    await db.scene.findOne({
+      _id: scene_id,
+      owner: username,
+    })
+  ) {
+    return true;
+  } else {
+    throw { name: "NotAllowed", message: "Not Allowed" }; //Depending on the premium terms
+  }
 }

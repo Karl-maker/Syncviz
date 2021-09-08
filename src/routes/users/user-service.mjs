@@ -90,7 +90,7 @@ async function login(req) {
 
     const access_token = await jwt.sign(payload, ACCESS_TOKEN_PRIVATE_KEY, {
       issuer: config.jwt.ISSUER,
-      subject: user.username,
+      subject: user.username.toLowerCase(),
       audience: [origin],
       expiresIn: `${config.jwt.ACCESS_TOKEN_LIFE * 60}s`,
       algorithm: config.jwt.ALGORITHM,
@@ -98,7 +98,7 @@ async function login(req) {
 
     const refresh_token = await jwt.sign(payload, REFRESH_TOKEN_PRIVATE_KEY, {
       issuer: config.jwt.ISSUER,
-      subject: user.username,
+      subject: user.username.toLowerCase(),
       audience: [origin],
       expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
       algorithm: config.jwt.ALGORITHM,

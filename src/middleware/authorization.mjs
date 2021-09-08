@@ -19,7 +19,7 @@ export const authorize = async (req, res, next) => {
     //Get Key
     const ACCESS_TOKEN_PUBLIC_KEY = config.jwt.ACCESS_TOKEN_PUBLIC_KEY;
 
-    const payload = jwt.verify(access_token, ACCESS_TOKEN_PUBLIC_KEY, {
+    const payload = await jwt.verify(access_token, ACCESS_TOKEN_PUBLIC_KEY, {
       issuer: config.jwt.ISSUER,
       subject: req.body.username,
       audience: req.body.origin,
@@ -49,7 +49,7 @@ export const authorizePassively = async (req, res, next) => {
     //Get Key
     const ACCESS_TOKEN_PUBLIC_KEY = config.jwt.ACCESS_TOKEN_PUBLIC_KEY;
 
-    const payload = jwt.verify(access_token, ACCESS_TOKEN_PUBLIC_KEY, {
+    const payload = await jwt.verify(access_token, ACCESS_TOKEN_PUBLIC_KEY, {
       issuer: config.jwt.ISSUER,
       subject: req.body.username,
       audience: req.body.origin,

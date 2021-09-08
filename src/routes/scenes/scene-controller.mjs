@@ -14,12 +14,23 @@ const router = express.Router();
 router.get("/scene/:id", authorizePassively, getScene);
 router.get("/scene/request/:id", authorizePassively, requestScene);
 //body: {title, view_type, description, category, is_private, passcode, (object_link)}, resource: {thumbnail_link, object_link, default_skybox_link*}
-router.post("/scene", authorize, createScene);
+router.post("/scene", authorize, devPlaceholder, createScene);
 //body: id - Scene
 router.delete("/scene", authorize, deleteScene);
 //query: q, c, order, page_size, page_number, s
 router.get("/scenes", authorize, getCurrentUserScenes);
 //--------FUNCTION--------------------
+
+function devPlaceholder(req, res, next) {
+  req.resource = {
+    thumbnail_link: "placeholder",
+    object_size: 5,
+    object_link: "placeholder",
+    default_skybox_link: "placeholder",
+  };
+
+  next();
+}
 
 function getScene(req, res, next) {
   sceneService
@@ -92,7 +103,7 @@ function getCurrentUserScenes(req, res, next) {
   sceneService
     .getMine(req)
     .then((scenes) => {
-      res.status(200).json({ scene: scene });
+      res.status(200).json({ scene: scenes });
     })
     .catch((err) => {
       next(err);
