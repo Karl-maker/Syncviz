@@ -1,14 +1,14 @@
 import express from "express";
 import notificationService from "./notification-service.mjs";
-import { authorize } from "../../middleware/authorization.mjs";
+import { protect } from "../../middleware/authorization.mjs";
 const router = express.Router();
 
 //params: id
-router.delete("/notification/:id", authorize, deleteNotification);
+router.delete("/notification/:id", protect, deleteNotification);
 //params: id
-router.get("/notification/:id", authorize, getNotification);
+router.get("/notification/:id", protect, getNotification);
 //query: {page_size, page_number, order}
-router.get("/notifications", authorize, getNotifications);
+router.get("/notifications", protect, getNotifications);
 
 //--------FUNCTION--------------------------------------
 

@@ -171,9 +171,9 @@ async function getMine(req) {
 async function request(req) {
   const user = req.user;
   const id = req.params.id;
-  var result;
+  var result = {};
 
-  const scene = await db.scene.findOne({ _id: req.params.id });
+  const scene = await db.scene.findOne({ _id: id });
 
   if (!scene) {
     throw { name: "NotFound", message: "Scene Not Found" };
@@ -182,20 +182,23 @@ async function request(req) {
   if (!scene.is_private) {
     //if private AND their is no user data ask them to loggin
 
+    //ERROR
     if (!user) {
       //Tell them to loggin
-      result = "Loggin";
+      result.request = "Loggin";
     } else {
+      logger.info({ message: "Has data within User variable " });
       //check if user has access
       if (await isAllowedView(user.username, id)) {
-        return "Authorized";
+        result.request = "Authorized";
+        return result;
       } else {
-        result = "Unauthorized";
+        result.request = "Unauthorized";
       }
     }
   }
   if (scene.passcode) {
-    result = "Passcode";
+    result.request = "Passcode";
   }
 
   return result;
@@ -205,27 +208,25 @@ async function request(req) {
 
 async function isAllowedCreate(user) {
   if (
-    await db.user.findOne({
+    await db.user.exists({
       _id: user.id,
       membership_info: { is_premium: true },
     })
   ) {
     return true;
   }
-  throw { name: "NotAllowed", message: "Not Premium User" }; //Depending on the premium terms
-
-  // Server || Backends checking expiration dates
+  throw { name: "NotAllowed", message: "Not Premium User" }; // Depending on the premium terms //--- Server || Backends checking expiration dates ---
 }
 
 async function isAllowedView(username, scene_id) {
   if (
-    await db.scene.findOne({
+    await db.scene.exists({
       _id: scene_id,
       owner: username,
     })
   ) {
     return true;
   } else {
-    throw { name: "NotAllowed", message: "Not Allowed" }; //Depending on the premium terms
+    return false;
   }
 }

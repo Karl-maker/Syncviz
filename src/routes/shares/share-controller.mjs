@@ -1,18 +1,18 @@
 import express from "express";
 import shareService from "./share-service.mjs";
-import { authorize } from "../../middleware/authorization.mjs";
+import { protect } from "../../middleware/authorization.mjs";
 import rateLimit from "express-rate-limit";
 const router = express.Router();
 
 //-------ROUTES----------------------------
 //bod: {to, scene_id, permission_level}
-router.post("/share", authorize, shareScene);
+router.post("/share", protect, shareScene);
 //body: share_id
-router.delete("/share", authorize, deleteShare);
+router.delete("/share", protect, deleteShare);
 //query: page_size, page_number, q, v, c, order
-router.get("/shares", authorize, getAllSharesOfScene);
+router.get("/shares", protect, getAllSharesOfScene);
 //body: {to, scene_id, permission_level}
-router.patch("/share", authorize, setSharePremissionLevel);
+router.patch("/share", protect, setSharePremissionLevel);
 //---------FUNCTIONS---------------------------
 
 function setSharePremissionLevel(req, res, next) {
