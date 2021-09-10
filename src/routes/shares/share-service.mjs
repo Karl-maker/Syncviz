@@ -51,7 +51,7 @@ async function getAllShares(req) {
   }
 
   const shares = await db.share
-    .findAll(query)
+    .find(query)
     .limit(page_size)
     .skip(page_size * page)
     .sort(order); // get all
@@ -66,32 +66,36 @@ async function create(req) {
   const share_id = req.body.share_id;
   const permission_level = req.body.permission_level.toLowerCase();
 
-  if (!(await db.scene.findOne({ _id: scene_id, owner: user.username }))) {
-    throw { name: "Unauthorize" };
+  try {
+    if (!(await db.scene.exists({ _id: scene_id, owner: user.username }))) {
+      throw { name: "Unauthorize" };
+    }
+
+    await db.share.findOneAndDelete({
+      owner: user.id,
+      to: to,
+      scene_id: scene_id,
+    });
+
+    const share = await db.share.create({
+      by: user.username,
+      to: to,
+      permission_level: permission_level,
+      scene_id: scene_id,
+    });
+
+    await db.notification.create({
+      info: {
+        message: `${user.username} has shared a scene with you`,
+        route: `/scene/${scene_id}`,
+      },
+      owner: to,
+    });
+
+    return share;
+  } catch (err) {
+    throw { message: err.message };
   }
-
-  await db.share.findAllAndDelete({
-    owner: user.id,
-    to: to,
-    scene_id: scene_id,
-  });
-
-  const share = await db.share.create({
-    by: user.username,
-    to: to,
-    permission_level: permission_level,
-    scene_id: scene_id,
-  });
-
-  await db.notification.create({
-    info: {
-      message: `${user.username} has shared a scene with you`,
-      route: `/scene/${share._id}`,
-    },
-    owner: user.username,
-  });
-
-  return share;
 }
 
 async function _delete(req) {

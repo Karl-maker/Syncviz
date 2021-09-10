@@ -32,24 +32,9 @@ function devPlaceholder(req, res, next) {
 
 function getScene(req, res, next) {
   sceneService
-    .request(req)
-    .then((result) => {
-      switch (true) {
-        case result.request === "Passcode":
-          return res.status(200).json({ message: "Password Required" });
-
-        case result.request === "Loggin":
-          return res.status(200).json({ message: "Loggin To Get Access" });
-
-        case result.request === "Unauthorized":
-          return res.status(200).json({ message: "Access Not Granted" });
-
-        case result.request === "Authorized":
-          return res.status(200).json({ message: "Access Granted" });
-
-        default:
-          return res.status(200).json({ message: "No Access" });
-      }
+    .getById(req)
+    .then((scene) => {
+      res.status(200).json(scene);
     })
     .catch((err) => {
       next(err);

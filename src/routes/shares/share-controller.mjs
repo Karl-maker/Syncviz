@@ -44,7 +44,7 @@ function shareScene(req, res, next) {
     .create(req)
     .then((share) => {
       res
-        .json(200)
+        .status(200)
         .json({ message: "Scene Successfully Shared", share: share });
     })
     .catch((err) => {

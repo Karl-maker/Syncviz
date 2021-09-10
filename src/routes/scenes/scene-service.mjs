@@ -70,21 +70,32 @@ async function _delete(req) {
 async function getById(req) {
   const user = req.user;
   const id = req.params.id;
-  const password = req.body.password;
+  const passcode = req.body.passcode;
 
   var scene;
 
   if (!(await isAllowedView(user.id, id))) {
     //Check for password
 
-    if (!password) {
+    if (!passcode) {
       //throw that shit
       throw { name: "Unauthorized", message: "Unauthorized" };
     } else {
       //compare
-      scene = await db.scene.findOne({ _id: id });
+      scene = await db.scene.findOne(
+        { _id: id },
+        {
+          passcode: 1,
+          title: 1,
+          view_type: 1,
+          description: 1,
+          category: 1,
+          owner: 1,
+          content: 1,
+        }
+      );
 
-      if (!(await bcrypt.compare(password, scene.passcode))) {
+      if (!(await bcrypt.compare(passcode, scene.passcode))) {
         throw { name: "Unauthorized", message: "Unauthorized" };
       }
     }
@@ -125,12 +136,12 @@ async function getAll(req) {
   }
 
   if (s) {
-    const shares = await db.share.findAll({ to: user.username }, { _id: 1 });
+    const shares = await db.share.find({ to: user.username }, { _id: 1 });
     query._id = { $in: shares._id };
   }
 
   const scenes = await db.user
-    .findAll(query)
+    .find(query)
     .limit(page_size)
     .skip(page_size * page)
     .sort(order); // get all

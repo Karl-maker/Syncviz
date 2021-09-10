@@ -40,7 +40,7 @@ async function getAll(req) {
   };
 
   const scenes = await db.user
-    .findAll(query)
+    .find(query)
     .limit(page_size)
     .skip(page_size * page)
     .sort(order); // get all
