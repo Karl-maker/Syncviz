@@ -75,7 +75,6 @@ router.patch(
     windowMs: 15 * 60 * 1000,
     max: 5,
   }),
-  authorize,
   protect,
   updatePassword
 );
@@ -86,7 +85,6 @@ router.delete(
     windowMs: config.jwt.ACCESS_TOKEN_LIFE * 60 * 1000,
     max: 5,
   }),
-  authorize,
   protect,
   deleteRefreshToken
 );
