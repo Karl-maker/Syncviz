@@ -1,5 +1,5 @@
 import config from "../config/config.mjs";
-import { db } from "../helpers/db.mjs";
+import db from "../helpers/db.mjs";
 import jwt from "jsonwebtoken";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";

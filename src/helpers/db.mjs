@@ -4,11 +4,7 @@ import config from "../config/config.mjs";
 
 //............. DB MODELS.............................
 
-import user from "../routes/users/user-model.mjs";
-import scene from "../routes/scenes/scene-model.mjs";
-import share from "../routes/shares/share-model.mjs";
-import notification from "../routes/notifications/notification-model.mjs";
-import login from "../routes/logins/login-model.mjs";
+import db from "../routes/models/index.mjs";
 
 // Create the database connection
 
@@ -67,10 +63,4 @@ process.on("SIGINT", () => {
 
 //..............Central access point to all db models.....................
 
-export const db = {
-  user: user,
-  scene: scene,
-  share: share,
-  notification: notification,
-  login: login,
-};
+export default db;

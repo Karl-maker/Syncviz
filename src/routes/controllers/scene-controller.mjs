@@ -1,11 +1,12 @@
 import express from "express";
-import sceneService from "./scene-service.mjs";
-import config from "../../config/config.mjs";
-import { protect } from "../../middleware/authorization.mjs";
-import rateLimit from "express-rate-limit";
 import multer from "multer";
 import fs from "fs";
+import rateLimit from "express-rate-limit";
+import service from "../services/index.mjs";
+import config from "../../config/config.mjs";
+import { protect } from "../../middleware/authorization.mjs";
 import logger from "../../log/server-logger.mjs";
+const sceneService = service.scene;
 const router = express.Router();
 
 //.................ROUTES.................................

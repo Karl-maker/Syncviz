@@ -1,8 +1,9 @@
 import express from "express";
-import shareService from "./share-service.mjs";
-import { protect } from "../../middleware/authorization.mjs";
 import rateLimit from "express-rate-limit";
+import { protect } from "../../middleware/authorization.mjs";
+import service from "../services/index.mjs";
 const router = express.Router();
+const shareService = service.share;
 
 //-------ROUTES----------------------------
 //bod: {to, scene_id, permission_level}

@@ -1,14 +1,14 @@
 "use strict";
 
-import { db } from "../../helpers/db.mjs";
+import db from "../../helpers/db.mjs";
 import config from "../../config/config.mjs";
 import logger from "../../log/server-logger.mjs";
+import transporter from "../../helpers/email.mjs";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
-import transporter from "../../helpers/email.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

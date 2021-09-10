@@ -1,4 +1,4 @@
-import { db } from "../../helpers/db.mjs";
+import db from "../../helpers/db.mjs";
 
 export default {
   getById,

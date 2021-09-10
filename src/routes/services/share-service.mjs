@@ -1,4 +1,4 @@
-import { db } from "../../helpers/db.mjs";
+import db from "../../helpers/db.mjs";
 import config from "../../config/config.mjs";
 import logger from "../../log/server-logger.mjs";
 

@@ -1,9 +1,10 @@
 import express from "express";
-import userService from "./user-service.mjs";
+import rateLimit from "express-rate-limit";
+import service from "../services/index.mjs";
 import config from "../../config/config.mjs";
 import { protect } from "../../middleware/authorization.mjs";
-import rateLimit from "express-rate-limit";
 const router = express.Router();
+const userService = service.user;
 
 //............ROUTES............................................
 

@@ -1,7 +1,8 @@
 import express from "express";
-import notificationService from "./notification-service.mjs";
+import service from "../services/index.mjs";
 import { protect } from "../../middleware/authorization.mjs";
 const router = express.Router();
+const notificationService = service.notification;
 
 //params: id
 router.delete("/notification/:id", protect, deleteNotification);
