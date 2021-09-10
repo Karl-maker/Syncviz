@@ -12,13 +12,13 @@ Link to Documentation: https://docs.google.com/document/d/12gGP0TI1YUMk8Vb679H9w
 import config from "./config/config.mjs";
 import logger from "./log/server-logger.mjs";
 import httpLogger from "./log/http-logger.mjs";
+import auth from "./routes/auth/auth-controller.mjs";
+import api from "./routes/index.mjs";
+import errorHandler from "./middleware/error-handler.mjs";
 import { corsOrigins } from "./middleware/cors.mjs";
 import { compressRouter } from "./middleware/compress.mjs";
-import api from "./routes/index.mjs";
 import { connectDB } from "./helpers/db.mjs";
 import { jsonParser, urlencodedParser } from "./middleware/body-parser.mjs";
-import auth from "./routes/auth/auth-controller.mjs";
-import errorHandler from "./middleware/error-handler.mjs";
 import { authorize } from "./middleware/authorization.mjs";
 
 //npm modules
