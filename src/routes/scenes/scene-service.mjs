@@ -15,26 +15,32 @@ export default {
 async function create(req) {
   const user = req.user;
   const resource = req.resource;
+  const passcode = req.body.passcode;
+  const title = req.body.title;
+  const view_type = req.body.view_type.toLowerCase();
+  const description = req.body.description;
+  const category = req.body.category.toLowerCase();
+  const is_private = req.body.is_private;
 
   //Check if user is premium
 
   await isAllowedCreate(user);
 
-  var passcode;
+  var encrypted_passcode;
 
-  if (req.body.passcode) {
-    passcode = await bcrypt.hash(req.body.passcode, 10);
+  if (passcode) {
+    encrypted_passcode = await bcrypt.hash(passcode, 10);
   }
 
   const scene = await db.scene.create({
-    title: req.body.title,
-    view_type: req.body.view_type,
-    description: req.body.description,
+    title: title,
+    view_type: view_type,
+    description: description,
     thumbnail_link: resource.thumbnail_link,
-    category: req.body.category,
+    category: category,
     owner: user.username,
-    is_private: req.body.is_private,
-    passcode: passcode,
+    is_private: is_private,
+    passcode: encrypted_passcode,
     content: {
       object_size: resource.object_size,
       object_link: resource.object_link || req.body.object_link, //User can use their own link
@@ -47,10 +53,11 @@ async function create(req) {
 
 async function _delete(req) {
   const user = req.user;
+  const scene_id = req.body.scene_id;
 
   try {
     await db.scene.findOneAndDelete({
-      _id: req.body.id,
+      _id: scene_id,
       owner: user.username,
     });
   } catch (err) {
@@ -63,20 +70,21 @@ async function _delete(req) {
 async function getById(req) {
   const user = req.user;
   const id = req.params.id;
+  const password = req.body.password;
 
   var scene;
 
-  if (!(await isAllowedView(user.id, req.params.id))) {
+  if (!(await isAllowedView(user.id, id))) {
     //Check for password
 
-    if (!req.body.password) {
+    if (!password) {
       //throw that shit
       throw { name: "Unauthorized", message: "Unauthorized" };
     } else {
       //compare
       scene = await db.scene.findOne({ _id: id });
 
-      if (!(await bcrypt.compare(req.body.password, compare_data.passcode))) {
+      if (!(await bcrypt.compare(password, scene.passcode))) {
         throw { name: "Unauthorized", message: "Unauthorized" };
       }
     }
@@ -90,8 +98,8 @@ async function getById(req) {
 async function getAll(req) {
   const page_size = parseInt(req.query.page_size, 10);
   const page_number = req.query.page_number;
-  const q = req.query.q; //title
-  const c = req.query.c; //category
+  const q = req.query.q.toLowerCase(); //title
+  const c = req.query.c.toLowerCase(); //category
   const s = req.query.s; //is_shared?
   const order = req.query.order;
 
@@ -133,7 +141,7 @@ async function getAll(req) {
 async function getMine(req) {
   const page_size = parseInt(req.query.page_size, 10);
   const page_number = req.query.page_number;
-  const q = req.query.q; //title
+  const q = req.query.q.toLowerCase(); //title
   const order = req.query.order || "asc";
   const user = req.user;
 

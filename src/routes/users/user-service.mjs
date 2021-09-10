@@ -31,10 +31,10 @@ export default {
 //.....Service Functions: ONLY req
 
 async function login(req) {
-  const username = req.body.username || null;
+  const username = req.body.username.toLowerCase() || null;
   const password = req.body.password || null;
-  const origin = req.body.origin || null;
-  const email = req.body.email || null;
+  const origin = req.body.origin.toLowerCase() || null;
+  const email = req.body.email.toLowerCase() || null;
 
   if ((!username && !email) || !password) {
     throw { name: "UnauthorizedError", message: "Fill In Fields" };
@@ -90,7 +90,7 @@ async function login(req) {
 
     const access_token = await jwt.sign(payload, ACCESS_TOKEN_PRIVATE_KEY, {
       issuer: config.jwt.ISSUER,
-      subject: user.username.toLowerCase(),
+      subject: user.username,
       audience: [origin],
       expiresIn: `${config.jwt.ACCESS_TOKEN_LIFE * 60}s`,
       algorithm: config.jwt.ALGORITHM,
@@ -98,7 +98,7 @@ async function login(req) {
 
     const refresh_token = await jwt.sign(payload, REFRESH_TOKEN_PRIVATE_KEY, {
       issuer: config.jwt.ISSUER,
-      subject: user.username.toLowerCase(),
+      subject: user.username,
       audience: [origin],
       expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
       algorithm: config.jwt.ALGORITHM,
@@ -134,21 +134,20 @@ async function login(req) {
 
 async function deleteRefreshToken(req) {
   const user = req.user;
+  const username = req.body.username.toLowerCase();
+  const origin = req.body.origin.toLowerCase();
+  const cookie_token = req.cookies["refresh_token"];
 
   //Get Key
   const REFRESH_TOKEN_PUBLIC_KEY = config.jwt.REFRESH_TOKEN_PUBLIC_KEY;
 
-  const payload = await jwt.verify(
-    req.cookies["refresh_token"],
-    REFRESH_TOKEN_PUBLIC_KEY,
-    {
-      issuer: config.jwt.ISSUER,
-      subject: req.body.username.toLowerCase(), //Stored In Local Storage
-      audience: req.body.origin, //Stored In Local Storage
-      expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
-      algorithm: [config.jwt.ALGORITHM],
-    }
-  );
+  const payload = await jwt.verify(cookie_token, REFRESH_TOKEN_PUBLIC_KEY, {
+    issuer: config.jwt.ISSUER,
+    subject: username, //Stored In Local Storage
+    audience: origin, //Stored In Local Storage
+    expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
+    algorithm: [config.jwt.ALGORITHM],
+  });
 
   if (!payload) {
     throw { name: "UnauthorizedError" };
@@ -157,7 +156,7 @@ async function deleteRefreshToken(req) {
   try {
     await db.login.findOneAndDelete({
       user_id: payload.id,
-      refresh_token: req.cookies["refresh_token"],
+      refresh_token: cookie_token,
     });
   } catch (err) {
     throw { name: "UnexpectedError" };
@@ -168,9 +167,8 @@ async function deleteRefreshToken(req) {
 
 async function confirmUserEmail(req) {
   const PIN = req.body.code;
-  const username = req.body.username || null;
-  const email = req.body.email || null;
-
+  const username = req.body.username.toLowerCase() || null;
+  const email = req.body.email.toLowerCase() || null;
   var user;
   var select = {
     token_code: req.body.code,
@@ -209,8 +207,10 @@ async function confirmUserEmail(req) {
 
 async function resetPassword(req) {
   const PIN = req.body.code;
-  const username = req.body.username;
-  const email = req.body.email;
+  const username = req.body.username.toLowerCase();
+  const email = req.body.email.toLowerCase();
+  const new_password = req.body.new_password;
+  const confirm_password = req.body.confirm_password;
 
   var select = {};
 
@@ -218,7 +218,7 @@ async function resetPassword(req) {
     throw { name: "UnauthorizedError", message: "Fill In Fields" };
   }
 
-  if (req.body.confirm_password !== req.body.new_password) {
+  if (confirm_password !== new_password) {
     throw {
       name: "ValidationError",
       message: {
@@ -251,7 +251,7 @@ async function resetPassword(req) {
     await db.user.findOneAndUpdate(
       { username: user.username, token_code: PIN },
       {
-        password: await bcrypt.hash(req.body.new_password, 10),
+        password: await bcrypt.hash(new_password, 10),
         token_code: null,
         token_expiration: null,
       }
@@ -265,14 +265,9 @@ async function resetPassword(req) {
 
 async function create(req) {
   // Get user input
-  const {
-    first_name,
-    last_name,
-    email,
-    password,
-    confirmed_password,
-    username,
-  } = req.body;
+  const { first_name, last_name, password, confirmed_password } = req.body;
+  const username = req.body.username.toLowerCase();
+  const email = req.body.email.toLowerCase();
 
   //Check Password
   if (confirmed_password !== password) {
@@ -332,6 +327,9 @@ async function create(req) {
 }
 
 async function getAccessToken(req) {
+  const username = req.body.username.toLowerCase();
+  const origin = req.body.origin.toLowerCase();
+  const cookie_token = req.cookies["refresh_token"];
   //Verify Token
 
   try {
@@ -339,17 +337,13 @@ async function getAccessToken(req) {
     const REFRESH_TOKEN_PUBLIC_KEY = config.jwt.REFRESH_TOKEN_PUBLIC_KEY;
     const ACCESS_TOKEN_PRIVATE_KEY = config.jwt.ACCESS_TOKEN_PRIVATE_KEY;
 
-    const payload = jwt.verify(
-      req.cookies["refresh_token"],
-      REFRESH_TOKEN_PUBLIC_KEY,
-      {
-        issuer: config.jwt.ISSUER,
-        subject: req.body.username, //Stored In Local Storage
-        audience: req.body.origin, //Stored In Local Storage
-        expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
-        algorithm: [config.jwt.ALGORITHM],
-      }
-    );
+    const payload = jwt.verify(cookie_token, REFRESH_TOKEN_PUBLIC_KEY, {
+      issuer: config.jwt.ISSUER,
+      subject: username, //Stored In Local Storage
+      audience: origin, //Stored In Local Storage
+      expiresIn: `${config.jwt.REFRESH_TOKEN_LIFE}d`,
+      algorithm: [config.jwt.ALGORITHM],
+    });
 
     if (!payload) {
       throw { name: "UnauthorizedError" };
@@ -357,7 +351,7 @@ async function getAccessToken(req) {
 
     const login_info = await db.login.findOne({
       user_id: payload.id,
-      refresh_token: req.cookies["refresh_token"],
+      refresh_token: cookie_token,
     });
 
     //Check if login expire
@@ -365,7 +359,7 @@ async function getAccessToken(req) {
     if (new Date(login_info.expire_date).valueOf() < new Date().valueOf()) {
       await db.login.findOneAndDelete({
         user_id: payload.id,
-        refresh_token: req.cookies["refresh_token"],
+        refresh_token: cookie_token,
       });
       throw { name: "UnauthorizedError" };
     }
@@ -377,8 +371,8 @@ async function getAccessToken(req) {
       ACCESS_TOKEN_PRIVATE_KEY,
       {
         issuer: config.jwt.ISSUER,
-        subject: req.body.username,
-        audience: [req.body.origin],
+        subject: username,
+        audience: [origin],
         expiresIn: `${config.jwt.ACCESS_TOKEN_LIFE * 60}s`,
         algorithm: config.jwt.ALGORITHM,
       }
@@ -398,7 +392,7 @@ async function getByUsername(req) {
   //parameters = req
   const page_size = parseInt(req.query.page_size, 10);
   const page_number = req.query.page_number;
-  const q = req.query.q;
+  const q = req.query.q.toLowerCase();
   const order = req.query.order;
 
   var users = [{}];
@@ -457,8 +451,9 @@ async function getByUsername(req) {
 }
 
 async function getOneByUsername(req) {
+  const username = req.params.username.toLowerCase();
   const user = await db.user.findOne(
-    { username: req.params.username },
+    { username: username },
     {
       is_confirmed: 0,
       use_email_notification: 0,
@@ -472,7 +467,10 @@ async function getOneByUsername(req) {
   );
 
   if (!user) {
-    throw { name: "NotFound", message: `${req.params.username} Not Found` };
+    throw {
+      name: "NotFound",
+      message: `${username} Not Found`,
+    };
   }
 
   return user;
@@ -480,31 +478,32 @@ async function getOneByUsername(req) {
 
 async function setUserPassword(req) {
   var current;
+  const username = req.user.username.toLowerCase();
+  const current_password = req.body.current_password;
+  const new_password = req.body.new_password;
+  const confirm_password = req.body.confirm_password;
   try {
-    current = await db.user.findOne(
-      { username: req.user.username },
-      { password: 1 }
-    );
+    current = await db.user.findOne({ username: username }, { password: 1 });
   } catch (err) {
     throw { message: "Unexpected Error With Database Retrieval" };
   }
 
-  if (!(await bcrypt.compare(req.body.current_password, current.password))) {
+  if (!(await bcrypt.compare(current_password, current.password))) {
     throw { name: "UnauthorizedError", message: "Password is incorrect" };
   }
 
-  if (req.body.new_password !== req.body.confirm_password) {
+  if (new_password !== confirm_password) {
     throw { name: "UnauthorizedError", message: "Passwords must match" };
   }
 
-  await setPassword(req.body.new_password, req.user._id);
+  await setPassword(new_password, req.user._id);
 
   return;
 }
 
 async function getResetPasswordLink(req) {
-  const username = req.body.username || null;
-  const email = req.body.email || null;
+  const username = req.body.username.toLowerCase() || null;
+  const email = req.body.email.toLowerCase() || null;
 
   if (!username && !email) {
     throw { name: "UnauthorizedError", message: "Fill In Fields" };
@@ -513,10 +512,10 @@ async function getResetPasswordLink(req) {
   var search = {};
 
   if (email) {
-    search.email = email.toLowerCase();
+    search.email = email;
   }
   if (username) {
-    search.username = username.toLowerCase();
+    search.username = username;
   }
 
   //Email OR Username
@@ -551,19 +550,17 @@ async function getResetPasswordLink(req) {
 
 async function _delete(req) {
   const password = req.body.password;
+  const username = req.body.username.toLowerCase();
 
   //Compare Passwords
 
-  const user = await db.user.findOne(
-    { username: req.user.username },
-    { password: 1 }
-  );
+  const user = await db.user.findOne({ username: username }, { password: 1 });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw { name: "UnauthorizedError", message: "User is unauthorized" };
   }
 
-  await db.user.findOneAndDelete({ username: req.user.username });
+  await db.user.findOneAndDelete({ username: username });
 
   return;
 }

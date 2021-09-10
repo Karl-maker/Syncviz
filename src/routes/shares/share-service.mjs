@@ -11,10 +11,13 @@ export default {
 
 async function setPremissionLevel(req) {
   const user = req.user;
+  const to = req.body.to.toLowerCase();
+  const scene_id = req.body.scene_id;
+  const permission_level = req.body.permission_level.toLowerCase();
 
   const shared = await db.share.findOneAndUpdate(
-    { scene_id: req.body.scene_id, to: req.body.to, owner: user },
-    { permission_level: req.body.permission_level }
+    { scene_id: scene_id, to: to, owner: user.username },
+    { permission_level: permission_level }
   );
 
   return shared;
@@ -58,24 +61,26 @@ async function getAllShares(req) {
 
 async function create(req) {
   const user = req.user;
+  const scene_id = req.body.scene_id;
+  const to = req.body.to.toLowerCase();
+  const share_id = req.body.share_id;
+  const permission_level = req.body.permission_level.toLowerCase();
 
-  if (
-    !(await db.scene.findOne({ _id: req.body.scene_id, owner: user.username }))
-  ) {
+  if (!(await db.scene.findOne({ _id: scene_id, owner: user.username }))) {
     throw { name: "Unauthorize" };
   }
 
   await db.share.findAllAndDelete({
     owner: user.id,
-    to: req.body.to,
-    scene_id: req.body.scene_id,
+    to: to,
+    scene_id: scene_id,
   });
 
   const share = await db.share.create({
     by: user.username,
-    to: req.body.to,
-    permission_level: req.body.permission_level,
-    scene_id: req.body.scene_id,
+    to: to,
+    permission_level: permission_level,
+    scene_id: scene_id,
   });
 
   await db.notification.create({
@@ -91,9 +96,10 @@ async function create(req) {
 
 async function _delete(req) {
   const user = req.user;
+  const share_id = req.body.share_id;
 
   try {
-    await db.share.findOneAndDelete({ _id: req.body.share_id, owner: user.id });
+    await db.share.findOneAndDelete({ _id: share_id, owner: user.id });
   } catch (err) {
     throw { name: "UnexpectedError" };
   }

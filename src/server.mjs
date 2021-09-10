@@ -14,7 +14,7 @@ import logger from "./log/server-logger.mjs";
 import httpLogger from "./log/http-logger.mjs";
 import { corsOrigins } from "./middleware/cors.mjs";
 import { compressRouter } from "./middleware/compress.mjs";
-import appRoutes from "./routes/index.mjs";
+import api from "./routes/index.mjs";
 import { connectDB } from "./helpers/db.mjs";
 import { jsonParser, urlencodedParser } from "./middleware/body-parser.mjs";
 import auth from "./routes/auth/auth-controller.mjs";
@@ -66,11 +66,10 @@ app.use(
 
 //API Routes
 app.use("/auth", auth);
-app.use("/api", authorize, appRoutes);
-
+app.use("/api", authorize, api);
 //Legal && Other Routes:
 
-//MERN Stack React.js Frontend App:
+//MERN Stack React.js Frontend App: awwwards.com for designs
 if (config.environment.NODE_ENV === "production") {
   app.use(express.static(config.environment.REACT_BUILD_PATH));
 

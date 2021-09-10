@@ -13,7 +13,7 @@ router.get("/scene/request/:id", requestScene);
 router.get("/scene/:id", getScene);
 //body: {title, view_type, description, category, is_private, passcode, (object_link)}, resource: {thumbnail_link, object_link, default_skybox_link*}
 router.post("/scene", protect, devPlaceholder, createScene);
-//body: id - Scene
+//body: scene_id - Scene
 router.delete("/scene", protect, deleteScene);
 //query: q, c, order, page_size, page_number, s
 router.get("/scenes", protect, getCurrentUserScenes);
