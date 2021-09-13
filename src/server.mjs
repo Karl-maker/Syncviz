@@ -39,56 +39,60 @@ const limiter = rateLimit({
   max: config.optimization.RATE_LIMIT_MAX,
 });
 
-//Database
-connectDB();
+const server = () => {
+  //Database
+  connectDB();
 
-//Middleware
-//GZIP all assets
-app.use((req, res, next) => {
-  //depending on content type switch contentType
-  compressRouter({ config: config, contentType: "DEFAULT" });
-  next();
-});
+  //Middleware
+  //GZIP all assets
+  app.use((req, res, next) => {
+    //depending on content type switch contentType
+    compressRouter({ config: config, contentType: "DEFAULT" });
+    next();
+  });
 
-app.use(httpLogger);
-app.use(helmet());
-app.use(limiter);
-app.use(urlencodedParser);
-app.use(jsonParser);
-app.use(cookieParser());
-app.use(
-  cors({
-    origin: corsOrigins.origin,
-    optionSuccessStatus: 200,
-  })
-);
-
-//API Routes
-app.use("/api", authorize, api);
-//Legal && Other Routes:
-
-//MERN Stack React.js Frontend App: awwwards.com for designs
-if (config.environment.NODE_ENV === "production") {
-  app.use(express.static(config.environment.REACT_BUILD_PATH));
-
-  const INDEX_PATH = path.join(
-    __dirname,
-    config.environment.REACT_BUILD_PATH,
-    config.environment.REACT_BUILD_INDEX
+  app.use(httpLogger);
+  app.use(helmet());
+  app.use(limiter);
+  app.use(urlencodedParser);
+  app.use(jsonParser);
+  app.use(cookieParser());
+  app.use(
+    cors({
+      origin: corsOrigins.origin,
+      optionSuccessStatus: 200,
+    })
   );
 
-  app.get("*", (req, res) => {
-    //res.sendFile(INDEX_PATH);
-    res.json({ message: "React App" });
-  });
-}
+  //API Routes
+  app.use("/api", authorize, api);
+  //Legal && Other Routes:
 
-app.use(errorHandler);
+  //MERN Stack React.js Frontend App: awwwards.com for designs
+  if (config.environment.NODE_ENV === "production") {
+    app.use(express.static(config.environment.REACT_BUILD_PATH));
 
-app.listen(config.server.PORT, config.server.HOST, () => {
-  //192.168.0.__:PORT
-  logger.info({
-    message: `Server Started and Listening on ${config.server.HOST}:${config.server.PORT} in a ${config.environment.NODE_ENV} environment`,
-    timestamp: `${new Date().toString()}`,
+    const INDEX_PATH = path.join(
+      __dirname,
+      config.environment.REACT_BUILD_PATH,
+      config.environment.REACT_BUILD_INDEX
+    );
+
+    app.get("*", (req, res) => {
+      //res.sendFile(INDEX_PATH);
+      res.json({ message: "React App" });
+    });
+  }
+
+  app.use(errorHandler);
+
+  app.listen(config.server.PORT, config.server.HOST, () => {
+    //192.168.0.__:PORT
+    logger.info({
+      message: `Server Started and Listening on ${config.server.HOST}:${config.server.PORT} in a ${config.environment.NODE_ENV} environment`,
+      timestamp: `${new Date().toString()}`,
+    });
   });
-});
+};
+
+export default server;
