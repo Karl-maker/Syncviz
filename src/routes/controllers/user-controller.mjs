@@ -36,8 +36,8 @@ function getCurrent(req, res, next) {
 function getUser(req, res, next) {
   userService
     .getOneByUsername(req)
-    .then((user) => {
-      res.status(200).json({ user: user });
+    .then(({ user, meta_data }) => {
+      res.status(200).json({ user: user, meta_data: meta_data });
     })
     .catch((err) => {
       next(err);
@@ -47,8 +47,10 @@ function getUser(req, res, next) {
 function getUsers(req, res, next) {
   userService
     .getByUsername(req)
-    .then((users) => {
-      res.status(200).json({ users: users, amount: users.length });
+    .then(({ users, meta_data }) => {
+      res
+        .status(200)
+        .json({ users: users, amount: users.length, meta_data: meta_data });
     })
     .catch((err) => {
       next(err);

@@ -4,11 +4,14 @@ import db from "../../helpers/db.mjs";
 import config from "../../config/config.mjs";
 import logger from "../../log/server-logger.mjs";
 import transporter from "../../helpers/email.mjs";
+import { client } from "../../helpers/redis.mjs";
 import bcrypt from "bcrypt";
+import axios from "axios";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
+import { promisify } from "util";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -391,11 +394,18 @@ async function getAccessToken(req) {
 async function getByUsername(req) {
   //parameters = req
   const page_size = parseInt(req.query.page_size, 10);
-  const page_number = req.query.page_number;
+  const page_number = parseInt(req.query.page_number, 10);
   const q = req.query.q.toLowerCase();
-  const order = req.query.order;
+  const order = "asc";
+  const user = req.user;
+  const cacheKey = `users?q=${q}`;
+  const getCacheAsync = promisify(client.get).bind(client);
+  const setCacheAsync = promisify(client.setex).bind(client);
+
+  //Check cache for first 10 users if user is searching like a crazy person
 
   var users = [{}];
+  var meta_data = { source: "Database" };
 
   //------Pagenation Helpers-------------
 
@@ -423,7 +433,45 @@ async function getByUsername(req) {
   if (q) {
     query.username = { $regex: `${q}`, $options: `i` };
   } else {
-    throw { name: "NotFound", message: "No Users" };
+    //Cache This Users Past Interactions
+
+    try {
+      users = await getCacheAsync(`users?u=${user.username}`).then(
+        (results) => {
+          if (results) {
+            meta_data.source = "Cache";
+            return JSON.parse(results);
+          }
+        }
+      );
+    } catch (err) {
+      logger.error({
+        message: err.message,
+        timestamp: `${new Date().toString()}`,
+      });
+    }
+
+    if (!users) throw { name: "NotFound", message: "No Users" };
+
+    return { users, meta_data };
+  }
+
+  //Check cache
+  if (page_number === 0) {
+    try {
+      return await getCacheAsync(cacheKey).then((results) => {
+        if (results) {
+          meta_data.source = "Cache";
+          users = JSON.parse(results);
+          return { users, meta_data };
+        }
+      });
+    } catch (err) {
+      logger.error({
+        message: err.message,
+        timestamp: `${new Date().toString()}`,
+      });
+    }
   }
 
   //----------Add Filters----------
@@ -447,24 +495,134 @@ async function getByUsername(req) {
     throw { name: "UnexpectedError", message: e.message };
   }
 
-  return users;
+  //Cache Result for next time if user is typing continuously
+
+  try {
+    await setCacheAsync(cacheKey, 120, JSON.stringify(users));
+  } catch (err) {
+    logger.error({
+      message: err.message,
+      timestamp: `${new Date().toString()}`,
+    });
+  }
+
+  return { users, meta_data };
 }
 
 async function getOneByUsername(req) {
   const username = req.params.username.toLowerCase();
-  const user = await db.user.findOne(
-    { username: username },
-    {
-      is_confirmed: 0,
-      use_email_notification: 0,
-      token_code: 0,
-      token_expiration: 0,
-      registered_date: 0,
-      membership_info: 0,
-      email: 0,
-      __v: 0,
+  const cacheKey = `user/${username}`;
+  const user_source = req.user.username;
+  const getCacheAsync = promisify(client.get).bind(client);
+  const setCacheAsync = promisify(client.setex).bind(client);
+  var user;
+  var meta_data;
+  //Find in Cache first before checking db
+
+  try {
+    user = await getCacheAsync(cacheKey)
+      .then((result) => {
+        if (result) {
+          meta_data = {
+            source: "Cache",
+          };
+          return JSON.parse(result);
+        }
+      })
+      .catch((err) => {
+        throw err;
+      });
+  } catch (err) {
+    logger.error({
+      message: err.message,
+      timestamp: `${new Date().toString()}`,
+    });
+  }
+
+  //... Check in db if not found
+  if (!user) {
+    try {
+      user = await db.user.findOne(
+        { username: username },
+        {
+          is_confirmed: 0,
+          use_email_notification: 0,
+          token_code: 0,
+          token_expiration: 0,
+          registered_date: 0,
+          membership_info: 0,
+          email: 0,
+          __v: 0,
+        }
+      );
+    } catch (err) {
+      throw { message: err.messgae };
     }
-  );
+
+    meta_data = {
+      source: "Database",
+    };
+  }
+  try {
+    if (user) {
+      //30 Days incase user is deleted it will disappear overtime since it doesn't update
+      await setCacheAsync(cacheKey, 86400 * 30, JSON.stringify(user));
+
+      //get cache and add to list
+
+      var cache_list;
+
+      if (
+        await getCacheAsync(`users?u=${user_source}`).then((result) => {
+          if (result) {
+            cache_list = result;
+            return true;
+          } else {
+            return false;
+          }
+        })
+      ) {
+        cache_list = JSON.parse(cache_list);
+
+        //Compare
+
+        var shouldUpdate = true;
+
+        for (var i = 0; i < cache_list.length; i++) {
+          if (cache_list[i].username === user.username) {
+            shouldUpdate = false;
+            i = cache_list.length + 1;
+          }
+        }
+        if (shouldUpdate) {
+          cache_list = [user].concat(cache_list);
+          if (cache_list.length > 5) {
+            cache_list.pop(); //Keep list at 5 elements
+          }
+        }
+
+        await setCacheAsync(
+          `users?u=${user_source}`,
+          86400 * 30,
+          JSON.stringify(cache_list)
+        );
+      } else {
+        //Cache miss
+        await setCacheAsync(
+          `users?u=${user_source}`,
+          86400 * 30,
+          JSON.stringify([user])
+        );
+      }
+    }
+  } catch (err) {
+    logger.error({
+      message: err.message,
+      timestamp: `${new Date().toString()}`,
+    });
+  }
+
+  //Store in Cache for next time
 
   if (!user) {
     throw {
@@ -473,7 +631,7 @@ async function getOneByUsername(req) {
     };
   }
 
-  return user;
+  return { user, meta_data };
 }
 
 async function setUserPassword(req) {

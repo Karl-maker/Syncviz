@@ -20,6 +20,12 @@ export default {
     PORT: process.env.DEV_API_PORT || 3000,
   },
 
+  cache: {
+    PORT: process.env.DEV_REDIS_PORT || 6379,
+    HOST: process.env.DEV_REDIS_HOST || "127.0.0.1",
+    URL: process.env.DEV_REDIS_URL || null,
+  },
+
   client: {
     //In terms of referencing from server
     PROTOCOL: process.env.DEV_PROTOCOL || "http",
