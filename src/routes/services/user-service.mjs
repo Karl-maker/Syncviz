@@ -12,7 +12,6 @@ import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import { promisify } from "util";
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 //To retrieve certain fields https://www.codegrepper.com/code-examples/javascript/mongoose+select+fields
@@ -405,7 +404,7 @@ async function getByUsername(req) {
   //Check cache for first 10 users if user is searching like a crazy person
 
   var users = [{}];
-  var meta_data = { source: "Database" };
+  var meta_data = { source: "database" };
 
   //------Pagenation Helpers-------------
 
@@ -433,13 +432,20 @@ async function getByUsername(req) {
   if (q) {
     query.username = { $regex: `${q}`, $options: `i` };
   } else {
-    //Cache This Users Past Interactions
+    /*
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Checking cache before database
+
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+  */
 
     try {
       users = await getCacheAsync(`users?u=${user.username}`).then(
         (results) => {
           if (results) {
-            meta_data.source = "Cache";
+            meta_data.source = "cache";
             return JSON.parse(results);
           }
         }
@@ -451,17 +457,33 @@ async function getByUsername(req) {
       });
     }
 
+    /*
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Checking cache before database
+
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+  */
+
     if (!users) throw { name: "NotFound", message: "No Users" };
 
     return { users, meta_data };
   }
 
-  //Check cache
+  /*
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Checking cache before database
+
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+  */
   if (page_number === 0) {
     try {
       return await getCacheAsync(cacheKey).then((results) => {
         if (results) {
-          meta_data.source = "Cache";
+          meta_data.source = "cache";
           users = JSON.parse(results);
           return { users, meta_data };
         }
@@ -473,6 +495,14 @@ async function getByUsername(req) {
       });
     }
   }
+  /*
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Checking cache before database
+
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+  */
 
   //----------Add Filters----------
 
@@ -495,7 +525,14 @@ async function getByUsername(req) {
     throw { name: "UnexpectedError", message: e.message };
   }
 
-  //Cache Result for next time if user is typing continuously
+  /*
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Storing results in cache for next time
+
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+  */
 
   try {
     await setCacheAsync(cacheKey, 120, JSON.stringify(users));
@@ -505,6 +542,15 @@ async function getByUsername(req) {
       timestamp: `${new Date().toString()}`,
     });
   }
+
+  /*
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Storing results in cache for next time
+
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+  */
 
   return { users, meta_data };
 }
@@ -517,14 +563,22 @@ async function getOneByUsername(req) {
   const setCacheAsync = promisify(client.setex).bind(client);
   var user;
   var meta_data;
-  //Find in Cache first before checking db
+
+  /*
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Checking cache before database
+
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+  */
 
   try {
     user = await getCacheAsync(cacheKey)
       .then((result) => {
         if (result) {
           meta_data = {
-            source: "Cache",
+            source: "cache",
           };
           return JSON.parse(result);
         }
@@ -539,7 +593,17 @@ async function getOneByUsername(req) {
     });
   }
 
+  /*
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Checking cache before database
+
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+  */
+
   //... Check in db if not found
+
   if (!user) {
     try {
       user = await db.user.findOne(
@@ -560,9 +624,20 @@ async function getOneByUsername(req) {
     }
 
     meta_data = {
-      source: "Database",
+      source: "database",
     };
   }
+
+  /*
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Storing in cache for next time
+  3. Storing query history
+
+  ------------------------------------------CACHE SECTION START------------------------------------------------------
+  */
+
   try {
     if (user) {
       //30 Days incase user is deleted it will disappear overtime since it doesn't update
@@ -622,7 +697,15 @@ async function getOneByUsername(req) {
     });
   }
 
-  //Store in Cache for next time
+  /*
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+
+  1. Code containing Redis Caching
+  2. Storing in cache for next time
+  3. Storing query history
+
+  ------------------------------------------CACHE SECTION END------------------------------------------------------
+  */
 
   if (!user) {
     throw {
@@ -754,6 +837,8 @@ async function getConfirmationEmail(user) {
 
   const PIN = await (Math.random() + 1).toString(36).substring(5);
 
+  //Handlebars
+
   try {
     await db.user.findOneAndUpdate(
       { username: user.username },
@@ -773,6 +858,7 @@ async function getConfirmationEmail(user) {
         user.first_name || user.username
       }, your confirmation code is ${PIN}`,
       email: user.email,
+      html: "emailHTML",
     });
   } catch (err) {
     throw { name: "UnexpectedError", message: err.message };

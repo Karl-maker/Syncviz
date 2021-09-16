@@ -68,10 +68,15 @@ async function _delete(req) {
 }
 
 async function getById(req) {
+  /*
+
+  For security purposes no caching will be implemented in the situation if a user changes privacy details
+  in a emergency. 
+
+  */
   const user = req.user;
   const id = req.params.id;
   const passcode = req.body.passcode;
-
   var scene;
 
   if (!(await isAllowedView(user.id, id))) {
@@ -113,6 +118,13 @@ async function getAll(req) {
   const c = req.query.c.toLowerCase(); //category
   const s = req.query.s; //is_shared?
   const order = req.query.order;
+  const getCacheAsync = promisify(client.get).bind(client);
+  const setCacheAsync = promisify(client.setex).bind(client);
+
+  var meta_data = {
+    source: "database",
+  };
+  var scenes;
 
   //-------------------------------------
 
@@ -140,13 +152,13 @@ async function getAll(req) {
     query._id = { $in: shares._id };
   }
 
-  const scenes = await db.user
+  scenes = await db.user
     .find(query)
     .limit(page_size)
     .skip(page_size * page)
     .sort(order); // get all
 
-  return scenes;
+  return { scenes, meta_data };
 }
 
 async function getMine(req) {
