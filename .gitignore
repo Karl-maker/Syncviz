@@ -17,6 +17,9 @@
 # debugging
 /logs
 
+#Test
+/src/test
+
 # misc
 .DS_Store
 .env.local

@@ -2,7 +2,7 @@ import cluster from "cluster";
 import os from "os";
 //---------------------------------------------------
 import logger from "./log/server-logger.mjs";
-import start from "./server.mjs";
+import { initialize } from "./server.mjs";
 
 const totalCPUs = os.cpus().length;
 
@@ -33,5 +33,5 @@ if (cluster.isMaster) {
     cluster.fork();
   });
 } else {
-  start();
+  initialize();
 }

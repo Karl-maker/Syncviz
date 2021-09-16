@@ -26,6 +26,7 @@ import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
+import { Server } from "socket.io";
 
 //utilites
 import path, { dirname } from "path";
@@ -33,15 +34,23 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+//React App Path
+const INDEX_PATH = path.join(
+  __dirname,
+  config.environment.REACT_BUILD_PATH,
+  config.environment.REACT_BUILD_INDEX
+);
 const app = express();
 const limiter = rateLimit({
   windowMs: config.optimization.RATE_LIMIT_WINDOWMS * 60 * 1000,
   max: config.optimization.RATE_LIMIT_MAX,
 });
 
-const server = () => {
+const initialize = () => {
   //Database
   connectDB();
+
+  //Connections
 
   //Middleware
   //GZIP all assets
@@ -64,28 +73,39 @@ const server = () => {
     })
   );
 
-  //API Routes
+  /*
+  ------------------------------ROUTES START-----------------------------------
+
+  API Routes, Static Resource Route, React App Route
+
+  -----------------------------------------------------------------------------
+  */
+
   app.use("/api", authorize, api);
-  //Legal && Other Routes:
+  app.use(
+    "/resource",
+    authorize,
+    express.static(path.join(__dirname, config.environment.RESOURCE_PATH))
+  );
 
-  //MERN Stack React.js Frontend App: awwwards.com for designs
-  if (config.environment.NODE_ENV === "production") {
-    app.use(express.static(config.environment.REACT_BUILD_PATH));
+  //----------------------------Frontends--------------------------------------
 
-    const INDEX_PATH = path.join(
-      __dirname,
-      config.environment.REACT_BUILD_PATH,
-      config.environment.REACT_BUILD_INDEX
-    );
+  app.get("/app", (req, res) => {
+    //res.sendFile(INDEX_PATH);
+    res.json({ message: "React App" });
+  });
+  app.get("/scene", (req, res) => {
+    //res.sendFile(INDEX_PATH);
+    res.json({ message: "React App Scene Viewer" });
+  });
+  /*
+  --------------------------------ROUTES END-----------------------------------
 
-    app.get("*", (req, res) => {
-      //res.sendFile(INDEX_PATH);
-      res.json({ message: "React App" });
-    });
-  }
+  API Routes, Static Resource Route, React App Route
 
+  -----------------------------------------------------------------------------
+  */
   app.use(errorHandler);
-
   app.listen(config.server.PORT, config.server.HOST, () => {
     //192.168.0.__:PORT
     logger.info({
@@ -95,4 +115,4 @@ const server = () => {
   });
 };
 
-export default server;
+export { initialize, app };

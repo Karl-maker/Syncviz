@@ -17,6 +17,7 @@ const defaults = {
     NODE_ENV: env,
     REACT_BUILD_PATH: process.env.REACT_BUILD_PATH || "client/build",
     REACT_BUILD_INDEX: process.env.REACT_BUILD_INDEX || "index.html",
+    RESOURCE_PATH: process.env.RESOURCE_PATH || "../resource",
   },
 };
 

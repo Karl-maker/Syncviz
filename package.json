@@ -5,7 +5,7 @@
   "main": "./src/server.mjs",
   "scripts": {
     "dev": "nodemon --experimental-modules ./src/cluster.mjs",
-    "dev_node": "node --experimental-modules ./src/server.mjs"
+    "test": "nodemon --experimental-modules ./src/test/app.mjs"
   },
   "keywords": [
     "API",
@@ -36,10 +36,12 @@
     "multer": "^1.4.3",
     "nodemailer": "^6.6.3",
     "redis": "^3.1.2",
+    "socket.io": "^4.2.0",
     "winston": "^3.3.3",
     "zlib": "^1.0.5"
   },
   "devDependencies": {
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.12",
+    "socket.io-client": "^4.2.0"
   }
 }
