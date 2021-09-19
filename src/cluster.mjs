@@ -11,6 +11,7 @@ import { createAdapter, setupPrimary } from "@socket.io/cluster-adapter";
 import logger from "./log/server-logger.mjs";
 import { initialize } from "./server/server.mjs";
 import config from "./config/config.mjs";
+import socket from "./connection/socket.mjs";
 
 const totalCPUs = os.cpus().length;
 const app = express();
@@ -89,5 +90,7 @@ if (cluster.isMaster) {
   // setup connection with the primary process
   setupWorker(io);
 
-  initialize(app, server, { express: express, io: io });
+  socket(io);
+
+  initialize(app, server, { express: express });
 }

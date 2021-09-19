@@ -12,7 +12,6 @@ Link to Documentation: https://docs.google.com/document/d/12gGP0TI1YUMk8Vb679H9w
 import config from "../config/config.mjs";
 import logger from "../log/server-logger.mjs";
 import httpLogger from "../log/http-logger.mjs";
-import socket from "../connection/socket.mjs";
 import api from "../routes/controllers/index.mjs";
 import errorHandler from "../middleware/error-handler.mjs";
 import { corsOrigins } from "../middleware/cors.mjs";
@@ -45,7 +44,7 @@ const limiter = rateLimit({
   max: config.optimization.RATE_LIMIT_MAX,
 });
 
-const initialize = (app, server, { express, io }) => {
+const initialize = (app, server, { express }) => {
   //Database
   connectDB();
 
@@ -107,8 +106,6 @@ const initialize = (app, server, { express, io }) => {
   -----------------------------------------------------------------------------
   */
   app.use(errorHandler);
-
-  socket(io);
 };
 
 export { initialize };

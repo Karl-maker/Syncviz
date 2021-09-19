@@ -2,6 +2,7 @@ import logger from "./log/server-logger.mjs";
 import { initialize } from "./server/server.mjs";
 import config from "./config/config.mjs";
 import express from "express";
+import socket from "./connection/socket.mjs";
 import { Server } from "socket.io";
 import ioRedis from "socket.io-redis";
 import { createServer } from "http";
@@ -20,4 +21,16 @@ io.adapter(
 
 //----START-----
 
-initialize(app, server, { express: express, io: io });
+initialize(app, server, { express: express });
+
+server.listen(config.server.PORT, config.server.HOST, () => {
+  //192.168.0.__:PORT
+  logger.info({
+    message: `Server Started and Listening on ${server.address().address}:${
+      server.address().port
+    } in a ${config.environment.NODE_ENV} environment`,
+    timestamp: `${new Date().toString()}`,
+  });
+});
+
+socket(io);
