@@ -20,6 +20,9 @@
 #Test
 /src/test
 
+#Resources
+/resources
+
 # misc
 .DS_Store
 .env.local

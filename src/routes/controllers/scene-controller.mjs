@@ -6,7 +6,6 @@ import service from "../services/index.mjs";
 import config from "../../config/config.mjs";
 import { protect } from "../../middleware/authorization.mjs";
 import logger from "../../log/server-logger.mjs";
-import { app } from "../../server.mjs";
 const sceneService = service.scene;
 const router = express.Router();
 

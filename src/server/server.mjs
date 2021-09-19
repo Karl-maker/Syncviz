@@ -9,24 +9,23 @@ This file will:
 Link to Documentation: https://docs.google.com/document/d/12gGP0TI1YUMk8Vb679H9wEROh_HRRtSpU3-IzjISQ6M/edit#
 */
 
-import config from "./config/config.mjs";
-import logger from "./log/server-logger.mjs";
-import httpLogger from "./log/http-logger.mjs";
-import api from "./routes/controllers/index.mjs";
-import errorHandler from "./middleware/error-handler.mjs";
-import { corsOrigins } from "./middleware/cors.mjs";
-import { compressRouter } from "./middleware/compress.mjs";
-import { connectDB } from "./helpers/db.mjs";
-import { jsonParser, urlencodedParser } from "./middleware/body-parser.mjs";
-import { authorize } from "./middleware/authorization.mjs";
+import config from "../config/config.mjs";
+import logger from "../log/server-logger.mjs";
+import httpLogger from "../log/http-logger.mjs";
+import socket from "../connection/socket.mjs";
+import api from "../routes/controllers/index.mjs";
+import errorHandler from "../middleware/error-handler.mjs";
+import { corsOrigins } from "../middleware/cors.mjs";
+import { compressRouter } from "../middleware/compress.mjs";
+import { connectDB } from "../helpers/db.mjs";
+import { jsonParser, urlencodedParser } from "../middleware/body-parser.mjs";
+import { authorize } from "../middleware/authorization.mjs";
 
 //npm modules
-import express from "express";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
-import { Server } from "socket.io";
 
 //utilites
 import path, { dirname } from "path";
@@ -40,13 +39,13 @@ const INDEX_PATH = path.join(
   config.environment.REACT_BUILD_PATH,
   config.environment.REACT_BUILD_INDEX
 );
-const app = express();
+
 const limiter = rateLimit({
   windowMs: config.optimization.RATE_LIMIT_WINDOWMS * 60 * 1000,
   max: config.optimization.RATE_LIMIT_MAX,
 });
 
-const initialize = () => {
+const initialize = (app, server, { express, io }) => {
   //Database
   connectDB();
 
@@ -85,7 +84,9 @@ const initialize = () => {
   app.use(
     "/resource",
     authorize,
-    express.static(path.join(__dirname, config.environment.RESOURCE_PATH))
+    express.static(
+      path.join(__dirname, `../${config.environment.RESOURCE_PATH}`)
+    )
   );
 
   //----------------------------Frontends--------------------------------------
@@ -106,13 +107,8 @@ const initialize = () => {
   -----------------------------------------------------------------------------
   */
   app.use(errorHandler);
-  app.listen(config.server.PORT, config.server.HOST, () => {
-    //192.168.0.__:PORT
-    logger.info({
-      message: `Server Started and Listening on ${config.server.HOST}:${config.server.PORT} in a ${config.environment.NODE_ENV} environment`,
-      timestamp: `${new Date().toString()}`,
-    });
-  });
+
+  socket(io);
 };
 
-export { initialize, app };
+export { initialize };

@@ -4,8 +4,7 @@
   "description": "A RESTful API service for a new social media platform",
   "main": "./src/server.mjs",
   "scripts": {
-    "dev": "nodemon --experimental-modules ./src/cluster.mjs",
-    "test": "nodemon --experimental-modules ./src/test/app.mjs"
+    "dev": "nodemon --experimental-modules ./src/cluster.mjs"
   },
   "keywords": [
     "API",
@@ -16,6 +15,8 @@
   "author": "Karl-Johan Bailey",
   "license": "ISC",
   "dependencies": {
+    "@socket.io/cluster-adapter": "^0.1.0",
+    "@socket.io/sticky": "^1.0.1",
     "axios": "^0.21.4",
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
@@ -37,6 +38,7 @@
     "nodemailer": "^6.6.3",
     "redis": "^3.1.2",
     "socket.io": "^4.2.0",
+    "socket.io-redis": "^6.1.1",
     "winston": "^3.3.3",
     "zlib": "^1.0.5"
   },

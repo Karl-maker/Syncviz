@@ -26,6 +26,12 @@ export default {
     URL: process.env.DEV_REDIS_URL || null,
   },
 
+  redis_socket_adapter: {
+    PORT: process.env.DEV_REDIS_SOCKET_ADAPTER_PORT || 6379,
+    HOST: process.env.DEV_REDIS_SOCKET_ADAPTER_HOST || "127.0.0.1",
+    URL: process.env.DEV_REDIS_SOCKET_ADAPTER_URL || null,
+  },
+
   client: {
     //In terms of referencing from server
     PROTOCOL: process.env.DEV_PROTOCOL || "http",
