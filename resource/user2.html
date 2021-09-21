@@ -8,7 +8,7 @@
     <h1>Testing...</h1>
     <script>
       const socket = io(
-        "http://localhost:3050/live-scene?scene=614a5749ea7208d2c78e154f&passcode=passcode",
+        "http://localhost:3050/live-scene?scene=613ac448c8d827e6af6fa1cb&passcode=passcode",
         {
           extraHeaders: {
             Authorization:
@@ -24,9 +24,8 @@
 
       setInterval(() => {
         socket.emit("message", {
-          message: "new new is a test to connect on this scene",
+          message: "User2 File",
         });
-        console.log("emit");
       }, 1000);
     </script>
   </body>
