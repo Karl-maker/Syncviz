@@ -16,7 +16,6 @@ import api from "../routes/controllers/index.mjs";
 import errorHandler from "../middleware/error-handler.mjs";
 import { corsOrigins } from "../middleware/cors.mjs";
 import { compressRouter } from "../middleware/compress.mjs";
-import { connectDB } from "../helpers/db.mjs";
 import { jsonParser, urlencodedParser } from "../middleware/body-parser.mjs";
 import { authorize } from "../middleware/authorization.mjs";
 
@@ -45,9 +44,6 @@ const limiter = rateLimit({
 });
 
 const initialize = (app, server, { express }) => {
-  //Database
-  connectDB();
-
   //Connections
 
   //Middleware

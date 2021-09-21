@@ -1,20 +1,36 @@
 import cluster from "cluster";
 import os from "os";
-import { createServer } from "http";
+import http from "http";
 import express from "express";
-import ioRedis from "socket.io-redis";
+import { createClient } from "redis";
 import { Server } from "socket.io";
 import { setupMaster, setupWorker } from "@socket.io/sticky";
-import { createAdapter, setupPrimary } from "@socket.io/cluster-adapter";
+import {
+  createAdapter as createClusterAdapter,
+  setupPrimary,
+} from "@socket.io/cluster-adapter";
+import { createAdapter as createRedisAdapter } from "@socket.io/redis-adapter";
+import cors from "cors";
 
 //---------------------------------------------------
 import logger from "./log/server-logger.mjs";
 import { initialize } from "./server/server.mjs";
 import config from "./config/config.mjs";
 import socket from "./connection/socket.mjs";
+import { connectDB } from "./helpers/db.mjs";
 
 const totalCPUs = os.cpus().length;
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+const pubClient = createClient({
+  host: config.redis_socket_adapter.PORT,
+  host: config.redis_socket_adapter.HOST,
+  url: config.redis_socket_adapter.URL || null,
+});
+const subClient = pubClient.duplicate();
+
+//--------REDIS--------------------------------------
 
 if (cluster.isMaster) {
   logger.info({
@@ -25,8 +41,6 @@ if (cluster.isMaster) {
     message: `Master ${process.pid} is running`,
     timestamp: new Date().toString(),
   });
-
-  const server = createServer(app);
 
   // setup sticky sessions
   setupMaster(server, {
@@ -71,26 +85,24 @@ if (cluster.isMaster) {
     cluster.fork();
   });
 } else {
-  const server = createServer(app);
-  const io = new Server(server, { cors: { origin: "*" } });
+  logger.info({
+    message: `Worker ${process.pid} started`,
+    timestamp: `${new Date().toString()}`,
+  });
 
   //----------------------------------------ADAPTERS-------------------------------------------------
-
-  io.adapter(
-    ioRedis({
-      host: config.redis_socket_adapter.PORT,
-      host: config.redis_socket_adapter.HOST,
-      url: config.redis_socket_adapter.URL || null,
-    })
-  );
-
   // use the cluster adapter
-  io.adapter(createAdapter());
+  io.adapter(createClusterAdapter());
+
+  //Redis adapter
+  io.adapter(createRedisAdapter(pubClient, subClient));
 
   // setup connection with the primary process
   setupWorker(io);
 
+  //------------------------------------INITIALIZE--------------------------------------------------
+  //Database
+  connectDB();
   socket(io);
-
   initialize(app, server, { express: express });
 }

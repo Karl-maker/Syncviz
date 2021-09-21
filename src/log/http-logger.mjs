@@ -14,7 +14,7 @@ morgan.token("user", (req) => {
   if (req.user) {
     return req.user.username;
   }
-  return "Unauthorized";
+  return "guest";
 });
 
 //Logger format

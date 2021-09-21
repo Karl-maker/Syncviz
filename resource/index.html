@@ -7,8 +7,28 @@
   <body>
     <h1>Testing...</h1>
     <script>
-      const socket = io("http://localhost:3000");
-      socket.on("connection");
+      const socket = io("http://localhost:3000", {
+        query: {
+          v: "613ac448c8d827e6af6fa1cb",
+        },
+        extraHeaders: {
+          Authorization:
+            "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxNDIzNzYzZGRkNjYxYWI2MWZhNzY4NSIsImlhdCI6MTYzMTcyOTYwOSwiZXhwIjoxNjMyMzI5NjA5LCJhdWQiOlsicG9zdG1hbiJdLCJpc3MiOiJTeW5jdml6IENvbXBhbnkiLCJzdWIiOiJrYXJsdGhlc2V2ZW4ifQ.GSFXNmRQHLs2h1fw4m2mLOl_DBXdUOMfDAyqdKWlGku-XosgPLRPZVbmNnujSMwWNGJ-J47Q-235wEuUxH-rRQ",
+        },
+      });
+      socket.on("connect", (data) => {
+        //When Connected
+      });
+
+      // handle the event sent with socket.send()
+      socket.on("syncviz", (data) => {
+        console.log(data);
+      });
+
+      // handle the event sent with socket.emit()
+      socket.on("greetings", (elem1, elem2, elem3) => {
+        console.log(elem1, elem2, elem3);
+      });
     </script>
   </body>
 </html>

@@ -4,20 +4,23 @@ import config from "./config/config.mjs";
 import express from "express";
 import socket from "./connection/socket.mjs";
 import { Server } from "socket.io";
-import ioRedis from "socket.io-redis";
+import { createAdapter as createRedisAdapter } from "@socket.io/redis-adapter";
+import { createClient } from "redis";
 import { createServer } from "http";
 import cors from "cors";
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
-io.adapter(
-  ioRedis({
-    host: config.redis_socket_adapter.PORT,
-    host: config.redis_socket_adapter.HOST,
-    url: config.redis_socket_adapter.URL || null,
-  })
-);
+//--------REDIS--------------------------------------
+const pubClient = createClient({
+  host: config.redis_socket_adapter.PORT,
+  host: config.redis_socket_adapter.HOST,
+  url: config.redis_socket_adapter.URL || null,
+});
+const subClient = pubClient.duplicate();
+
+io.adapter(createRedisAdapter(pubClient, subClient));
 
 //----START-----
 
