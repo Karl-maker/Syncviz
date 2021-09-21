@@ -16,13 +16,12 @@ import cors from "cors";
 import logger from "./log/server-logger.mjs";
 import { initialize } from "./server/server.mjs";
 import config from "./config/config.mjs";
-import socket from "./connection/socket.mjs";
+import socket from "./connection/index.mjs";
 import { connectDB } from "./helpers/db.mjs";
 
 const totalCPUs = os.cpus().length;
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+
 const pubClient = createClient({
   host: config.redis_socket_adapter.PORT,
   host: config.redis_socket_adapter.HOST,
@@ -42,6 +41,8 @@ if (cluster.isMaster) {
     timestamp: new Date().toString(),
   });
 
+  const server = http.createServer();
+
   // setup sticky sessions
   setupMaster(server, {
     loadBalancingMethod: "least-connection",
@@ -56,10 +57,11 @@ if (cluster.isMaster) {
     serialization: "advanced",
   });
 
-  server.listen(config.server.PORT, config.server.HOST, () => {
+  //-----------------------------------Socket------------------------------------
+  server.listen(Number(config.server.PORT) + 50, config.server.HOST, () => {
     //192.168.0.__:PORT
     logger.info({
-      message: `Server Started and Listening on ${server.address().address}:${
+      message: `Socket Started and Listening on ${server.address().address}:${
         server.address().port
       } in a ${config.environment.NODE_ENV} environment`,
       timestamp: `${new Date().toString()}`,
@@ -85,6 +87,13 @@ if (cluster.isMaster) {
     cluster.fork();
   });
 } else {
+  const server = http.createServer();
+  const io = new Server(
+    server,
+    { cors: { origin: "*" } },
+    { path: "/live-scene" }
+  );
+
   logger.info({
     message: `Worker ${process.pid} started`,
     timestamp: `${new Date().toString()}`,
@@ -101,8 +110,19 @@ if (cluster.isMaster) {
   setupWorker(io);
 
   //------------------------------------INITIALIZE--------------------------------------------------
+
   //Database
   connectDB();
+
+  //-----------------------------------HTTP-------------------------------------
+  app.listen(config.server.PORT, config.server.HOST, () => {
+    //192.168.0.__:PORT
+    logger.info({
+      message: `HTTP Server Started and Listening on ${config.server.HOST}:${config.server.PORT} in a ${config.environment.NODE_ENV} environment`,
+      timestamp: `${new Date().toString()}`,
+    });
+  });
+
   socket(io);
-  initialize(app, server, { express: express });
+  initialize(app, { express: express });
 }

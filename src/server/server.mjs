@@ -43,7 +43,7 @@ const limiter = rateLimit({
   max: config.optimization.RATE_LIMIT_MAX,
 });
 
-const initialize = (app, server, { express }) => {
+const initialize = (app, { express }) => {
   //Connections
 
   //Middleware

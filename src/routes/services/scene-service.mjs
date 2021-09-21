@@ -75,11 +75,36 @@ async function getById(req) {
 
   */
   const user = req.user;
-  const id = req.params.id;
-  const passcode = req.body.passcode;
+  var id;
+  var passcode;
   var scene;
 
-  if (!(await isAllowedView(user.id, id))) {
+  try {
+    id = req.params.id || req.query.id;
+    passcode = req.body.passcode || req.query.passcode || "";
+  } catch (err) {
+    id = req.query.id;
+    passcode = req.query.passcode;
+  }
+
+  scene = await db.scene.findOne(
+    { _id: id },
+    {
+      passcode: 1,
+      title: 1,
+      view_type: 1,
+      description: 1,
+      category: 1,
+      owner: 1,
+      content: 1,
+    }
+  );
+
+  if (!scene) {
+    throw { name: "Unauthorized", message: "Unauthorized" };
+  }
+
+  if (!(await isAllowedView(user.username, id))) {
     //Check for password
 
     if (!passcode) {
@@ -87,18 +112,6 @@ async function getById(req) {
       throw { name: "Unauthorized", message: "Unauthorized" };
     } else {
       //compare
-      scene = await db.scene.findOne(
-        { _id: id },
-        {
-          passcode: 1,
-          title: 1,
-          view_type: 1,
-          description: 1,
-          category: 1,
-          owner: 1,
-          content: 1,
-        }
-      );
 
       if (!(await bcrypt.compare(passcode, scene.passcode))) {
         throw { name: "Unauthorized", message: "Unauthorized" };
