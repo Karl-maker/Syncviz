@@ -70,6 +70,11 @@ export default (io) => {
       });
     });
 
+    socket.on("3d-file", async (data) => {
+      const file = await new Buffer(data).toString("base64");
+      socket.in(socket.request.query.id).emit("3d-file", file);
+    });
+
     socket.on("disconnect", (data) => {
       socket.in(socket.request.query.id).emit("prompt", {
         message: `${socket.request.user.username} Left`,
