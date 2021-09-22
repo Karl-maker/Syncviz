@@ -45,10 +45,11 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Username is required"],
     unique: true,
     trim: true,
-    minlength: [
-      MIN_USERNAME,
-      `Username must have more than ${MIN_USERNAME} characters`,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      "Please use a valid username",
     ],
+    match: ["guest", "Guest is not an allowed username"],
     maxlength: [
       MAX_USERNAME,
       `Username must have less than ${MIN_USERNAME} characters`,

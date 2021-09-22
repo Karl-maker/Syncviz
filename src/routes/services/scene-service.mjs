@@ -81,7 +81,7 @@ async function getById(req) {
 
   try {
     id = req.params.id || req.query.id;
-    passcode = req.body.passcode || req.query.passcode || "";
+    passcode = req.body.passcode || req.query.passcode;
   } catch (err) {
     id = req.query.id;
     passcode = req.query.passcode;
@@ -103,7 +103,6 @@ async function getById(req) {
   if (!scene) {
     throw { name: "Unauthorized", message: "Unauthorized" };
   }
-
   if (!(await isAllowedView(user.username, id))) {
     //Check for password
 

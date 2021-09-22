@@ -74,6 +74,7 @@ async function authorizeIo(req, next) {
 
     next();
   } catch (err) {
+    req.user = { id: null, username: "guest" };
     next();
   }
 }

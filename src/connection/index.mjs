@@ -1,6 +1,7 @@
 import logger from "../log/server-logger.mjs";
 import { authorizeIo } from "../middleware/authorization.mjs";
 import protectScene from "./scene/scene-protect.mjs";
+import config from "../config/config.mjs";
 
 export default (io) => {
   var user = {};
@@ -13,15 +14,76 @@ export default (io) => {
     await protectScene(socket, next);
 
     socket.on("message", (data) => {
-      socket
-        .in(socket.request.query.id)
-        .emit("message", { message: `${data.message}` });
+      socket.in(socket.request.query.id).emit("message", {
+        message: `${data.message}`,
+        date: `${new Date().getDay()}/${new Date().getMonth()}/${new Date().getFullYear()}`,
+        time: `${new Date()
+          .toLocaleString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          })
+          .toString()}`,
+        user: socket.request.user.username,
+        connection_id: socket.id,
+      });
+    });
+
+    socket.on("position", (data) => {
+      socket.in(socket.request.query.id).emit("position", {
+        location: {
+          x: data.location.x,
+          y: data.location.y,
+          z: data.location.z,
+        },
+        rotation: {
+          x: data.rotation.x,
+          y: data.rotation.y,
+          z: data.rotation.z,
+        },
+        user: socket.request.user.username,
+        connection_id: socket.id,
+      });
+    });
+
+    socket.on("typing", (data) => {
+      socket.in(socket.request.query.id).emit("typing", {
+        is_typing: true,
+        user: socket.request.user.username,
+        connection_id: socket.id,
+      });
+    });
+
+    socket.on("connect", (data) => {
+      socket.in(socket.request.query.id).emit("prompt", {
+        message: `${socket.request.user.username} Joined`,
+        date: `${new Date().getDay()}/${new Date().getMonth()}/${new Date().getFullYear()}`,
+        time: `${new Date()
+          .toLocaleString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          })
+          .toString()}`,
+        user: socket.request.user.username,
+        connection_id: socket.id,
+      });
     });
 
     socket.on("disconnect", (data) => {
-      socket
-        .in(socket.request.query.id)
-        .emit("message", { message: `User Left Scene` });
+      socket.in(socket.request.query.id).emit("prompt", {
+        message: `${socket.request.user.username} Left`,
+        date: `${new Date().getDay()}/${new Date().getMonth()}/${new Date().getFullYear()}`,
+        time: `${new Date()
+          .toLocaleString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          })
+          .toString()}`,
+        user: socket.request.user.username,
+        connection_id: socket.id,
+      });
 
       logger.info({
         user: socket.request.user.username,

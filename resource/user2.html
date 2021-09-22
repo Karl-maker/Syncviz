@@ -12,21 +12,21 @@
         {
           extraHeaders: {
             Authorization:
-              "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxNDI4YWJjNDk3ZDQxZDliZWIxY2ZmNiIsImlhdCI6MTYzMTkyNDAyMSwiZXhwIjoxNjMyNTI0MDIxLCJhdWQiOlsicG9zdG1hbiJdLCJpc3MiOiJTeW5jdml6IENvbXBhbnkiLCJzdWIiOiJrYXJsdGhldHdvIn0.Y3e3E0oNhsVYTU3uPIVDr330b4MkOWnO3oeQ9Javx3cEgV0O5awx15tYZgC1fYytNJ6qOZQBnYMqgK_HMQJdjA",
+              "Bearer yJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxNDI4YWJjNDk3ZDQxZDliZWIxY2ZmNiIsImlhdCI6MTYzMTkyNDAyMSwiZXhwIjoxNjMyNTI0MDIxLCJhdWQiOlsicG9zdG1hbiJdLCJpc3MiOiJTeW5jdml6IENvbXBhbnkiLCJzdWIiOiJrYXJsdGhldHdvIn0.Y3e3E0oNhsVYTU3uPIVDr330b4MkOWnO3oeQ9Javx3cEgV0O5awx15tYZgC1fYytNJ6qOZQBnYMqgK_HMQJdjA",
           },
         }
       );
 
       // handle the event sent with socket.send()
       socket.on("message", function (data) {
-        console.log("Incoming message:", data.message);
+        console.log("Incoming message:", data);
       });
 
       setInterval(() => {
         socket.emit("message", {
           message: "User2 File",
         });
-      }, 1000);
+      }, 5000);
     </script>
   </body>
 </html>
