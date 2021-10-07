@@ -5,4 +5,4 @@
 ## Scripts:
 
 1. #### production: "npm run production"
-2. #### development: "npm run development"
+2. #### development: "npm run dev"
